@@ -1,6 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const isLoading = ref(false)
 const handleLogin = () => {
   isLoading.value = true
@@ -8,7 +10,7 @@ const handleLogin = () => {
   setTimeout(() => {
     isLoading.value = false
     // Redirect to members page after login
-    $router.push('/members')
+    router.push('/members')
   }, 2000)
 }
 
@@ -20,7 +22,7 @@ const handleLogin = () => {
       <div class="text-center font-bold pb-2">Admin</div>
       <div class="text-center font-bold pb-2">登入</div>
 
-      <form class="mt-4 space-y-5" @submit.prevent="() => $router.push('/members')">
+      <form class="mt-4 space-y-5" @submit.prevent="handleLogin">
         <div class="-space-y-px rounded-md shadow-md">
           <div>
             <input type="email" autocomplete="email" required
@@ -36,7 +38,7 @@ const handleLogin = () => {
 
         <div>
           <button type="submit"
-            class="relative flex w-full justify-center rounded-md  border border-transparent bg-sky-400 py-3 text-sm font-medium text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 disabled:bg-sky-400">
+            class="relative flex w-full justify-center rounded-md  border border-transparent bg-sky-300 py-3 text-sm font-medium text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 disabled:bg-sky-400">
             <span v-if="isLoading">
               <svg class="-ml-1 mr-3 h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
                 viewBox="0 0 24 24">
