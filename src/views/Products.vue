@@ -203,13 +203,14 @@ const paginatedProducts = computed(() => {
         <thead>
           <tr class=" bg-sky-200 rounded-lg">
             <th class="py-2 pl-4 text-left rounded-tl-lg">No,</th>
-            <th class="p-2 text-left rounded-tr-lg">Pic</th>
+            <th class="p-2 text-left">Pic</th>
             <th class="p-2 text-left">Product Name</th>
-            <th class="p-2 text-left">Price</th>
+            <th class="p-2 text-left rounded-tr-lg">Price</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in paginatedProducts" :key="product.pid">
+          <tr v-for="(product, index) in paginatedProducts" :key="product.pid"
+            :class="index % 2 === 1 ? 'bg-blue-50' : ''">
             <td class="py-2 pl-4 border-b border-blue-100">{{ product.pid }}</td>
             <td class="p-2 border-b border-blue-100">
               <img :src="`/images/product/${product.product_img}`" alt="產品圖片" class="h-12 w-12 object-cover rounded" />

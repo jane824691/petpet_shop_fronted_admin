@@ -5,10 +5,14 @@ import Products from '../views/Products.vue'
 
 const routes = [
   {
-    path: '/',
-    name: 'Login',
-    component: Login
-  },
+      path: '/',
+      redirect: '/login'
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: Login
+    },
   {
     path: '/members',
     name: 'Members',
