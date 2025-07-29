@@ -211,8 +211,11 @@ const paginatedProducts = computed(() => {
         <tbody>
           <tr v-for="product in paginatedProducts" :key="product.pid">
             <td class="py-2 pl-4 border-b border-blue-100">{{ product.pid }}</td>
-            <td class="p-2 border-b border-blue-100">{{ product.product_img }}</td>
+            <td class="p-2 border-b border-blue-100">
+              <img :src="`/images/product/${product.product_img}`" alt="產品圖片" class="h-12 w-12 object-cover rounded" />
+            </td>
             <td class="p-2 border-b border-blue-100">{{ product.product_name }}</td>
+
             <td class="p-2 border-b border-blue-100">{{ product.product_price }}</td>
           </tr>
         </tbody>
@@ -222,4 +225,3 @@ const paginatedProducts = computed(() => {
     <v-pagination v-model="page" :length="totalPages"></v-pagination>
   </div>
 </template>
-

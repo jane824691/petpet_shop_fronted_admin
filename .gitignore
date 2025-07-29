@@ -101,7 +101,8 @@ dist-ssr
 
 # Gatsby cache
 .cache/
-public
+!public
+!public/images
 
 # Mac files
 .DS_Store
