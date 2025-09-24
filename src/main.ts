@@ -4,6 +4,18 @@ import App from './App.vue'
 import router from './router'
 import './style.css'
 
+/* import the fontawesome core */
+import { library } from '@fortawesome/fontawesome-svg-core'
+
+/* import font awesome icon component */
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+/* import specific icons */
+import { faTrash, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+
+/* add icons to the library */
+library.add(faTrash, faPenToSquare )
+
 // Vuetify
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
@@ -17,4 +29,4 @@ const vuetify = createVuetify({
 
 const pinia = createPinia()
 
-createApp(App).use(router).use(pinia).use(vuetify).mount('#app')
+createApp(App).use(router).use(pinia).use(vuetify).component('font-awesome-icon', FontAwesomeIcon).mount('#app')

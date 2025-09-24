@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 
 const products = ref([
   {
@@ -184,6 +184,18 @@ const products = ref([
   }
 ])
 
+// 記錄哪些產品被選取
+const selectedProducts = reactive(new Set())
+
+// 點擊切換狀態
+const toggleSelect = (pid: number) => {
+  if (selectedProducts.has(pid)) {
+    selectedProducts.delete(pid); // 取消選取
+  } else {
+    selectedProducts.add(pid); // 增加選取
+  }
+}
+
 const page = ref(1)
 const itemsPerPage = 5
 
@@ -196,6 +208,10 @@ const paginatedProducts = computed(() => {
 })
 </script>
 
+<!-- Vue <font-awesome-icon> 的 icon 屬性規則
+Solid	fas	@fortawesome/free-solid-svg-icons
+Regular	far	@fortawesome/free-regular-svg-icons
+Brands	fab	@fortawesome/free-brands-svg-icons -->
 <template>
   <div class="bg-gray-100 flex flex-col items-center justify-center" style="min-height: calc(100vh - 3rem);">
     <div class="p-6 w-full">
@@ -205,7 +221,11 @@ const paginatedProducts = computed(() => {
             <th class="py-2 pl-4 text-left rounded-tl-lg">No,</th>
             <th class="p-2 text-left">Pic</th>
             <th class="p-2 text-left">Product Name</th>
-            <th class="p-2 text-left rounded-tr-lg">Price</th>
+            <th class="p-2 text-left">Price</th>
+            <th class="p-2 text-left "><font-awesome-icon :icon="['fas', 'pen-to-square']"
+                class="inline-block size-4" /></th>
+            <th class="p-2 text-left rounded-tr-lg"><font-awesome-icon :icon="['fas', 'trash']"
+                class="inline-block size-4" /></th>
           </tr>
         </thead>
         <tbody>
@@ -218,6 +238,21 @@ const paginatedProducts = computed(() => {
             <td class="p-2 border-b border-blue-100">{{ product.product_name }}</td>
 
             <td class="p-2 border-b border-blue-100">{{ product.product_price }}</td>
+            <td class="p-2 border-b border-blue-100"><font-awesome-icon :icon="['fas', 'pen-to-square']"
+                class="inline-block size-4 text-blue-500" /></td>
+
+            <td class="p-2 border-b border-blue-100">
+              <div @click="toggleSelect(product.pid)"
+                class="w-5 h-5 border-2 border-blue-500 hover:border-blue-700 rounded cursor-pointer flex items-center justify-center transition-colors"
+                :class="selectedProducts.has(product.pid) ? 'bg-blue-500' : 'bg-white'">
+                <svg v-if="selectedProducts.has(product.pid)" class="w-3 h-3 text-white" fill="currentColor"
+                  viewBox="0 0 20 20">
+                  <path fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd" />
+                </svg>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
