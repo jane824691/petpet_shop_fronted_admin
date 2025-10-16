@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
+import { Collapse, CollapsePanel } from 'ant-design-vue';
 
 const products = ref([
   {
@@ -12,10 +13,10 @@ const products = ref([
     "product_img": "d2a9f8e12b76b2aff433f62946427ab895c2de81.jpg",
     "edit_time": "2020-12-27T13:50:05.000Z",
     "product_description": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度",
-    "product_name_en": "tails&me ｜Classic Nylon Series Dual Color Standard Multi-functional Leash",
     "product_description_en": "Versatile simple color scheme, pets can also look beautiful when going out. I-shaped harness design, quick on and off, disperses pressure without compressing pets' trachea. 100% nylon woven material, strong and wear-resistant, excellent softness. Thick woven dense webbing, smooth texture, strong and tensile super durable. Reinforced stitching zero dead corners, combines beauty and toughness.",
+    "product_name_en": "tails&me ｜Classic Nylon Series Dual Color Standard Multi-functional Leash",
     "product_name_zh": "tails&me 尾巴與我｜經典尼龍帶系列 雙色標準款多功能牽繩",
-    "product_description_zh": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度"
+
   },
   {
     "pid": 203,
@@ -30,7 +31,7 @@ const products = ref([
     "product_name_en": "tails&me ｜Natural Concept Leather Series Harness",
     "product_description_en": "Versatile simple color scheme, pets can also look beautiful when going out. I-shaped harness design, quick on and off, disperses pressure without compressing pets' trachea. 100% nylon woven material, strong and wear-resistant, excellent softness. Thick woven dense webbing, smooth texture, strong and tensile super durable. Reinforced stitching zero dead corners, combines beauty and toughness.",
     "product_name_zh": "tails&me 尾巴與我｜自然概念革系列 胸背帶",
-    "product_description_zh": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度"
+
   },
   {
     "pid": 202,
@@ -45,7 +46,7 @@ const products = ref([
     "product_name_en": "tails&me ｜Natural Concept Leather Series Leash",
     "product_description_en": "Versatile simple color scheme, pets can also look beautiful when going out. I-shaped harness design, quick on and off, disperses pressure without compressing pets' trachea. 100% nylon woven material, strong and wear-resistant, excellent softness. Thick woven dense webbing, smooth texture, strong and tensile super durable. Reinforced stitching zero dead corners, combines beauty and toughness.",
     "product_name_zh": "tails&me 尾巴與我｜自然概念革系列 牽繩",
-    "product_description_zh": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度"
+
   },
   {
     "pid": 201,
@@ -60,7 +61,7 @@ const products = ref([
     "product_name_en": "tails&me ｜Natural Concept Leather Series Collar",
     "product_description_en": "Versatile simple color scheme, pets can also look beautiful when going out. I-shaped harness design, quick on and off, disperses pressure without compressing pets' trachea. 100% nylon woven material, strong and wear-resistant, excellent softness. Thick woven dense webbing, smooth texture, strong and tensile super durable. Reinforced stitching zero dead corners, combines beauty and toughness.",
     "product_name_zh": "tails&me 尾巴與我｜自然概念革系列 項圈",
-    "product_description_zh": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度"
+
   },
   {
     "pid": 200,
@@ -75,7 +76,7 @@ const products = ref([
     "product_name_en": "tails&me ｜Classic Nylon Series Dual Color Collar (5 colors)",
     "product_description_en": "Versatile simple color scheme, pets can also look beautiful when going out. I-shaped harness design, quick on and off, disperses pressure without compressing pets' trachea. 100% nylon woven material, strong and wear-resistant, excellent softness. Thick woven dense webbing, smooth texture, strong and tensile super durable. Reinforced stitching zero dead corners, combines beauty and toughness.",
     "product_name_zh": "tails&me 尾巴與我｜經典尼龍帶系列 雙色項圈 (共5色)",
-    "product_description_zh": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度"
+
   },
   {
     "pid": 199,
@@ -90,7 +91,7 @@ const products = ref([
     "product_name_en": "tails&me ｜Natural Concept Leather Series Accessory-Dog",
     "product_description_en": "Versatile simple color scheme, pets can also look beautiful when going out. I-shaped harness design, quick on and off, disperses pressure without compressing pets' trachea. 100% nylon woven material, strong and wear-resistant, excellent softness. Thick woven dense webbing, smooth texture, strong and tensile super durable. Reinforced stitching zero dead corners, combines beauty and toughness.",
     "product_name_zh": "tails&me 尾巴與我｜自然概念革系列 配件-狗",
-    "product_description_zh": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度"
+
   },
   {
     "pid": 198,
@@ -105,7 +106,7 @@ const products = ref([
     "product_name_en": "tails&me ｜Classic Nylon Series Single Color One-to-Two Leash (10 colors)",
     "product_description_en": "Versatile simple color scheme, pets can also look beautiful when going out. I-shaped harness design, quick on and off, disperses pressure without compressing pets' trachea. 100% nylon woven material, strong and wear-resistant, excellent softness. Thick woven dense webbing, smooth texture, strong and tensile super durable. Reinforced stitching zero dead corners, combines beauty and toughness.",
     "product_name_zh": "tails&me 尾巴與我｜經典尼龍帶系列 單色一對二牽繩 (共10色)",
-    "product_description_zh": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度"
+
   },
   {
     "pid": 197,
@@ -135,7 +136,7 @@ const products = ref([
     "product_name_en": "tails&me ｜Classic Nylon Series Dual Color One-to-Two Leash (7 colors)",
     "product_description_en": "Versatile simple color scheme, pets can also look beautiful when going out. I-shaped harness design, quick on and off, disperses pressure without compressing pets' trachea. 100% nylon woven material, strong and wear-resistant, excellent softness. Thick woven dense webbing, smooth texture, strong and tensile super durable. Reinforced stitching zero dead corners, combines beauty and toughness.",
     "product_name_zh": "tails&me 尾巴與我｜經典尼龍帶系列 雙色一對二牽繩 (共7色)",
-    "product_description_zh": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度"
+
   },
   {
     "pid": 195,
@@ -150,7 +151,7 @@ const products = ref([
     "product_name_en": "tails&me ｜Classic Nylon Series Enhanced Multi-functional Leash (6 colors)",
     "product_description_en": "Versatile simple color scheme, pets can also look beautiful when going out. I-shaped harness design, quick on and off, disperses pressure without compressing pets' trachea. 100% nylon woven material, strong and wear-resistant, excellent softness. Thick woven dense webbing, smooth texture, strong and tensile super durable. Reinforced stitching zero dead corners, combines beauty and toughness.",
     "product_name_zh": "tails&me 尾巴與我｜經典尼龍帶系列 加強款多功能牽繩 (共6色)",
-    "product_description_zh": "百搭簡約色系，毛孩出門也可以美美的 \r\n工字型胸背設計，快速穿脫，分散壓力不壓迫毛孩氣管 \r\n100%尼龍織材，強韌耐磨，柔軟度極佳 \r\n厚織密實織帶，滑順質感，強韌抗拉超耐用 \r\n車工強化零死角，兼具美觀與韌度"
+
   },
   {
     "pid": 194,
@@ -220,7 +221,7 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
           <tr class=" bg-sky-200 rounded-lg">
             <th class="py-2 pl-4 text-left rounded-tl-lg">No,</th>
             <th class="p-2 text-left">Pic</th>
-            <th class="p-2 text-left">Product Name</th>
+            <th class="p-2 pl-6 text-left">Product Name</th>
             <th class="p-2 text-left">Price</th>
             <th class="p-2 text-left "><font-awesome-icon :icon="['fas', 'pen-to-square']"
                 class="inline-block size-4" /></th>
@@ -235,8 +236,13 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
             <td class="p-2 border-b border-blue-100">
               <img :src="`/images/product/${product.product_img}`" alt="產品圖片" class="h-12 w-12 object-cover rounded" />
             </td>
-            <td class="p-2 border-b border-blue-100">{{ product.product_name }}</td>
-
+            <td class="p-2 border-b border-blue-100">
+              <Collapse :bordered="false" :style="{ backgroundColor: 'transparent' }">
+                <CollapsePanel :key="product.pid" :header="product.product_name">
+                  <p>{{ product.product_description }}</p>
+                </CollapsePanel>
+              </Collapse>
+            </td>
             <td class="p-2 border-b border-blue-100">{{ product.product_price }}</td>
             <td class="p-2 border-b border-blue-100"><font-awesome-icon :icon="['fas', 'pen-to-square']"
                 class="inline-block size-4 text-blue-500" /></td>
