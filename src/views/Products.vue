@@ -1,8 +1,26 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
-import { Collapse, CollapsePanel } from 'ant-design-vue';
+import { Collapse, CollapsePanel, Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption } from 'ant-design-vue';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-const products = ref([
+// Define the interface for a single product
+interface Product {
+  pid: number;
+  category_id: number;
+  product_name: string;
+  product_price: number;
+  stock: number;
+  sales_condition: string;
+  product_img: string;
+  edit_time: string;
+  product_description: string;
+  product_description_en: string;
+  product_name_en: string;
+  product_name_zh: string;
+  product_description_zh?: string; // Optional property
+}
+
+const products = ref<Product[]>([
   {
     "pid": 204,
     "category_id": 12,
@@ -185,6 +203,66 @@ const products = ref([
   }
 ])
 
+// Modal state
+const isModalVisible = ref(false);
+const modalMode = ref<'add' | 'edit'>('add');
+const editingProduct = ref<Product | null>(null);
+
+const initialFormState = {
+  pid: 0,
+  category_id: 0,
+  product_name: '',
+  product_price: 0,
+  stock: 0,
+  sales_condition: '上架中',
+  product_img: '',
+  edit_time: '',
+  product_description: '',
+  product_description_en: '',
+  product_name_en: '',
+  product_name_zh: '',
+  product_description_zh: '',
+};
+
+const formState = reactive({ ...initialFormState });
+
+const openModal = (mode: 'add' | 'edit', product?: Product) => {
+  modalMode.value = mode;
+  if (mode === 'edit' && product) {
+    editingProduct.value = product;
+    Object.assign(formState, product);
+  } else {
+    editingProduct.value = null;
+    Object.assign(formState, initialFormState);
+    formState.pid = Math.floor(Math.random() * 1000) + 300; // 臨時的 pid
+  }
+  isModalVisible.value = true;
+};
+
+const handleOk = () => {
+  if (modalMode.value === 'add') {
+    // 新增邏輯
+    const newProduct = { ...formState, edit_time: new Date().toISOString() };
+    products.value.unshift(newProduct);
+    console.log('Adding:', newProduct);
+  } else {
+    // 編輯邏輯
+    if (editingProduct.value) {
+      const index = products.value.findIndex(p => p.pid === editingProduct.value!.pid);
+      if (index !== -1) {
+        products.value[index] = { ...formState, edit_time: new Date().toISOString() };
+      }
+    }
+    console.log('Saving:', formState);
+  }
+  isModalVisible.value = false;
+};
+
+const handleCancel = () => {
+  isModalVisible.value = false;
+};
+
+
 // 記錄哪些產品被選取
 const selectedProducts = reactive(new Set())
 
@@ -216,6 +294,9 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
 <template>
   <div class="bg-gray-100 flex flex-col items-center justify-center" style="min-height: calc(100vh - 3rem);">
     <div class="p-6 w-full">
+      <div class="flex justify-end mb-4">
+        <AButton type="primary" @click="openModal('add')">＋</AButton>
+      </div>
       <table class="overflow-x-auto shadow-lg shadow-slate-400/10 rounded-lg bg-white w-full">
         <thead>
           <tr class=" bg-sky-200 rounded-lg">
@@ -223,13 +304,14 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
             <th class="p-2 text-left">Pic</th>
             <th class="p-2 pl-6 text-left">Product Name</th>
             <th class="p-2 text-left">Price</th>
-            <th class="p-2 text-left "><font-awesome-icon :icon="['fas', 'pen-to-square']"
-                class="inline-block size-4" /></th>
+            <th class="p-2 text-left">Status</th>
+            <th class="p-2 text-left ">Edit</th>
             <th class="p-2 text-left rounded-tr-lg"><font-awesome-icon :icon="['fas', 'trash']"
                 class="inline-block size-4" /></th>
           </tr>
         </thead>
         <tbody>
+          <!-- 臨時建立的變數 product, 做為單一產品-->
           <tr v-for="(product, index) in paginatedProducts" :key="product.pid"
             :class="index % 2 === 1 ? 'bg-blue-50' : ''">
             <td class="py-2 pl-4 border-b border-blue-100">{{ product.pid }}</td>
@@ -244,8 +326,9 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
               </Collapse>
             </td>
             <td class="p-2 border-b border-blue-100">{{ product.product_price }}</td>
+            <td class="py-2 pl-2 border-b border-blue-100">{{ product.sales_condition }}</td>
             <td class="p-2 border-b border-blue-100"><font-awesome-icon :icon="['fas', 'pen-to-square']"
-                class="inline-block size-4 text-blue-500" /></td>
+                class="inline-block size-4 text-blue-500" @click="openModal('edit', product)" /></td>
 
             <td class="p-2 border-b border-blue-100">
               <div @click="toggleSelect(product.pid)"
@@ -265,5 +348,45 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
     </div>
 
     <v-pagination v-model="page" :length="totalPages"></v-pagination>
+
+    <!-- Add/Edit Product Modal -->
+    <AModal 
+      v-model:open="isModalVisible" 
+      :title="modalMode === 'add' ? '新增商品' : '編輯商品'" 
+      @ok="handleOk" 
+      @cancel="handleCancel"
+      width="800px"
+    >
+      <AForm :model="formState" layout="vertical">
+        <AFormItem label="Product Name (ZH)">
+          <AInput v-model:value="formState.product_name_zh" />
+        </AFormItem>
+        <AFormItem label="Product Name (EN)">
+          <AInput v-model:value="formState.product_name_en" />
+        </AFormItem>
+        <AFormItem label="Price">
+          <AInputNumber v-model:value="formState.product_price" :min="0" style="width: 100%" />
+        </AFormItem>
+        <AFormItem label="Stock">
+          <AInputNumber v-model:value="formState.stock" :min="0" style="width: 100%" />
+        </AFormItem>
+        <AFormItem label="Sales Condition">
+          <ASelect v-model:value="formState.sales_condition">
+            <ASelectOption value="上架中">上架中</ASelectOption>
+            <ASelectOption value="已下架">已下架</ASelectOption>
+          </ASelect>
+        </AFormItem>
+        <AFormItem label="Product Description (ZH)">
+          <AInput.TextArea v-model:value="formState.product_description" :rows="4" />
+        </AFormItem>
+        <AFormItem label="Product Description (EN)">
+          <AInput.TextArea v-model:value="formState.product_description_en" :rows="4" />
+        </AFormItem>
+        <AFormItem label="Image Filename">
+          <AInput v-model:value="formState.product_img" />
+        </AFormItem>
+      </AForm>
+    </AModal>
+
   </div>
 </template>
