@@ -2,6 +2,8 @@
 import { ref, computed, reactive } from 'vue'
 import { Collapse, CollapsePanel, Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { getProducts } from '../api/product'
+import { onMounted } from 'vue' 
 
 // Define the interface for a single product
 interface Product {
@@ -225,6 +227,11 @@ const initialFormState = {
 };
 
 const formState = reactive({ ...initialFormState });
+
+onMounted(async () => {
+  const data = await getProducts();
+  console.log(data);
+})
 
 const openModal = (mode: 'add' | 'edit', product?: Product) => {
   modalMode.value = mode;
