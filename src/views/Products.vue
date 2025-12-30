@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, reactive,onMounted } from 'vue'
+import { ref, computed, reactive,onMounted, watch } from 'vue'
 import { Collapse, CollapsePanel, Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { getProducts } from '../api/product'
@@ -225,15 +225,24 @@ const initialFormState = {
 };
 
 const formState = reactive({ ...initialFormState });
+const page = ref(1) // Vue用ref雙向綁定資料, 1為預設頁數
+const products = ref<{ rows: Product[] }>({ rows: [] }); // 等同React： const [products, setProducts] = useState({ rows: [] })
+const totalPagesValue = ref<number>(0);
 
-onMounted(async () => {
-  const response = await getProducts();
+const init = async () => {
+  const response = await getProducts({ page: page.value}); // 餵回給api當前頁數在第幾頁
   console.log(response);
   products.value = response as { rows: Product[] };
-})
+  const totalPages = Number((response as { totalPages: number }).totalPages) || 1; 1;
+  totalPagesValue.value = totalPages;
+}
 
-// 等同React： const [products, setProducts] = useState({ rows: [] })
-const products = ref<{ rows: Product[] }>({ rows: [] });
+onMounted(init);  
+
+// 監聽page的變化，如果page的變化，則重新初始化
+watch(page, () => {
+  init();
+})
 
 const openModal = (mode: 'add' | 'edit', product?: Product) => {
   modalMode.value = mode;
@@ -284,16 +293,6 @@ const toggleSelect = (pid: number) => {
   }
 }
 
-// const page = ref(1)
-// const itemsPerPage = 5
-
-// const totalPages = computed(() => Math.ceil(products.value.length / itemsPerPage))
-
-// const paginatedProducts = computed(() => {
-//   const startIndex = (page.value - 1) * itemsPerPage
-//   const endIndex = startIndex + itemsPerPage
-//   return products.value.slice(startIndex, endIndex)
-// })
 </script>
 
 <!-- Vue <font-awesome-icon> 的 icon 屬性規則
@@ -359,7 +358,8 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
       </table>
     </div>
 
-    <!-- <v-pagination v-model="page" :length="totalPages"></v-pagination> -->
+    <!-- Vuetify 組件 v-pagination 的 :length 為 0 時可能不渲染或報錯 -->
+    <v-pagination v-if="totalPagesValue > 0" v-model="page" :length="totalPagesValue" :total-visible="7"></v-pagination>
 
     <!-- Add/Edit Product Modal -->
     <AModal 
