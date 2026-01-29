@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, reactive,onMounted, watch } from 'vue'
+import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { Collapse, CollapsePanel, Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { getProducts } from '../api/product'
@@ -45,16 +45,24 @@ const totalPagesValue = ref<number>(0);
 const formState = reactive({ ...initialFormState });
 
 const init = async () => {
-  const response = await getProducts({ page: page.value}); // 餵回給api當前頁數在第幾頁
+  const response = await getProducts({ page: page.value }); // 餵回給api當前頁數在第幾頁
   console.log(response);
   products.value = response as { rows: Product[] };
   const totalPages = Number((response as { totalPages: number }).totalPages) || 1; 1;
   totalPagesValue.value = totalPages;
 }
+const DEFAULT_IMG = '@public/images/product/638348807730300000 (1).jfif'
 
-onMounted(init);  
+// 商品圖可能存在專案路徑裡，也可能存在Firebase的連結
+const getImagePath = (image?: string | null) => {
+  if (!image) return DEFAULT_IMG
+  if (image.startsWith('http')) return image
+  return `/images/product/${image}`
+}
 
-// 監聽page的變化，如果page的變化，則重新初始化
+onMounted(init);
+
+// 監聽page的變化，如果page的變化，則重新初始化，類似useEffect
 watch(page, () => {
   init();
 })
@@ -135,11 +143,10 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
         </thead>
         <tbody>
           <!-- 臨時建立的變數 product, 做為單一產品, products是整個陣列, rows是陣列中的物件-->
-          <tr v-for="(product, index) in products.rows" :key="product.pid"
-            :class="index % 2 === 1 ? 'bg-blue-50' : ''">
+          <tr v-for="(product, index) in products.rows" :key="product.pid" :class="index % 2 === 1 ? 'bg-blue-50' : ''">
             <td class="py-2 pl-4 border-b border-blue-100">{{ product.pid }}</td>
             <td class="p-2 border-b border-blue-100">
-              <img :src="`/images/product/${product.product_img}`" alt="產品圖片" class="h-12 w-12 object-cover rounded" />
+              <img :src=getImagePath(product.product_img) alt="產品圖片" class="h-12 w-12 object-cover rounded" />
             </td>
             <td class="p-2 border-b border-blue-100">
               <!-- 多包一個div避免預設的ant Collapse 直接撐爆 td -->
@@ -178,13 +185,8 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
     <v-pagination v-if="totalPagesValue > 0" v-model="page" :length="totalPagesValue" :total-visible="7"></v-pagination>
 
     <!-- Add/Edit Product Modal -->
-    <AModal 
-      v-model:open="isModalVisible" 
-      :title="modalMode === 'add' ? '新增商品' : '編輯商品'" 
-      @ok="handleOk" 
-      @cancel="handleCancel"
-      width="800px"
-    >
+    <AModal v-model:open="isModalVisible" :title="modalMode === 'add' ? '新增商品' : '編輯商品'" @ok="handleOk"
+      @cancel="handleCancel" width="800px">
       <AForm :model="formState" layout="vertical">
         <AFormItem label="Product Name (ZH)">
           <AInput v-model:value="formState.product_name_zh" />
@@ -210,8 +212,10 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
         <AFormItem label="Product Description (EN)">
           <AInput.TextArea v-model:value="formState.product_description_en" :rows="4" />
         </AFormItem>
+        <!-- TODO: 前後台圖存儲於各專案內, 故修改無法同步, 待處理 -->
         <AFormItem label="Image Filename">
-          <AInput v-model:value="formState.product_img" />
+          <AInput v-if="modalMode === 'add'" v-model:value="formState.product_img" />
+          <AInput v-else v-model:value="formState.product_img" disabled />
         </AFormItem>
       </AForm>
     </AModal>
