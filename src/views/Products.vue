@@ -44,6 +44,7 @@ const products = ref<{ rows: Product[] }>({ rows: [] }); // 等同React： const
 const totalPagesValue = ref<number>(0);
 const formState = reactive({ ...initialFormState });
 
+// 呼叫api: 商品總清單
 const init = async () => {
   const response = await getProducts({ page: page.value }); // 餵回給api當前頁數在第幾頁
   console.log(response);
@@ -212,10 +213,11 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
         <AFormItem label="Product Description (EN)">
           <AInput.TextArea v-model:value="formState.product_description_en" :rows="4" />
         </AFormItem>
-        <!-- TODO: 前後台圖存儲於各專案內, 故修改無法同步, 待處理 -->
-        <AFormItem label="Image Filename">
-          <AInput v-if="modalMode === 'add'" v-model:value="formState.product_img" />
-          <AInput v-else v-model:value="formState.product_img" disabled />
+        <AFormItem label="Image Filename" encType="multipart/form-data">
+          <i class="pi pi-images" style="font-size: 2rem"></i>
+          <img v-if="modalMode === 'edit'" :src=getImagePath(formState.product_img)
+            alt="產品圖片"
+            class="h-64 w-64 object-cover rounded" />
         </AFormItem>
       </AForm>
     </AModal>

@@ -4,6 +4,7 @@ import App from './App.vue'
 import router from './router'
 import './style.css'
 import 'ant-design-vue/dist/reset.css';
+import 'primeicons/primeicons.css'
 
 /* import the fontawesome core */
 import { library } from '@fortawesome/fontawesome-svg-core'
