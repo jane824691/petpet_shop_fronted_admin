@@ -1,54 +1,24 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, watch } from 'vue'
-import { Collapse, CollapsePanel, Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption } from 'ant-design-vue';
+import { Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { getProducts } from '../api/product'
-// Define the interface for a single product
-interface Product {
-  pid: number;
-  category_id: number;
-  product_name: string;
-  product_price: number;
-  stock: number;
-  sales_condition: string;
-  product_img: string;
-  edit_time: string;
-  product_description: string;
-  product_description_en: string;
-  product_name_en: string;
-  product_name_zh: string;
-  product_description_zh?: string; // Optional property
-}
+import { getProducts } from '../api/productApi'
+import type { Products } from '../types/productTypes'
+import { initialProductsFormState } from '../states/productForm'
 
-const initialFormState = {
-  pid: 0,
-  category_id: 0,
-  product_name: '',
-  product_price: 0,
-  stock: 0,
-  sales_condition: '上架中',
-  product_img: '',
-  edit_time: '',
-  product_description: '',
-  product_description_en: '',
-  product_name_en: '',
-  product_name_zh: '',
-  product_description_zh: '',
-};
 
 const isModalVisible = ref(false);
 const modalMode = ref<'add' | 'edit'>('add');
-const editingProduct = ref<Product | null>(null);
+const editingProduct = ref<Products | null>(null);
 const page = ref(1) // Vue用ref雙向綁定資料, 1為預設頁數
-const products = ref<{ rows: Product[] }>({ rows: [] }); // 等同React： const [products, setProducts] = useState({ rows: [] })
+const products = ref<{ rows: Products[] }>({ rows: [] }); // 等同React： const [products, setProducts] = useState({ rows: [] })
 const totalPagesValue = ref<number>(0);
-const formState = reactive({ ...initialFormState });
+const formState = reactive(initialProductsFormState());
 
 // 呼叫api: 商品總清單
 const init = async () => {
   const response = await getProducts({ page: page.value }); // 餵回給api當前頁數在第幾頁
-  console.log(response);
-  products.value = response as { rows: Product[] };
+  products.value = response as { rows: Products[] };
   const totalPages = Number((response as { totalPages: number }).totalPages) || 1; 1;
   totalPagesValue.value = totalPages;
 }
@@ -68,14 +38,14 @@ watch(page, () => {
   init();
 })
 
-const openModal = (mode: 'add' | 'edit', product?: Product) => {
+const openModal = (mode: 'add' | 'edit', product?: Products) => {
   modalMode.value = mode;
   if (mode === 'edit' && product) {
     editingProduct.value = product;
     Object.assign(formState, product);
   } else {
     editingProduct.value = null;
-    Object.assign(formState, initialFormState);
+    Object.assign(formState, initialProductsFormState());
     formState.pid = Math.floor(Math.random() * 1000) + 300; // 臨時的 pid
   }
   isModalVisible.value = true;
@@ -134,7 +104,7 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
           <tr class=" bg-sky-200 rounded-lg">
             <th class="py-2 pl-4 text-left rounded-tl-lg">No,</th>
             <th class="p-2 text-left">Pic</th>
-            <th class="p-2 pl-6 text-left">Product Name</th>
+            <th class="p-2 pl-6 text-left">Products Name</th>
             <th class="p-2 text-left">Price</th>
             <th class="p-2 text-left">Status</th>
             <th class="p-2 text-left ">Edit</th>
@@ -148,16 +118,6 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
             <td class="py-2 pl-4 border-b border-blue-100">{{ product.pid }}</td>
             <td class="p-2 border-b border-blue-100">
               <img :src=getImagePath(product.product_img) alt="產品圖片" class="h-12 w-12 object-cover rounded" />
-            </td>
-            <td class="p-2 border-b border-blue-100">
-              <!-- 多包一個div避免預設的ant Collapse 直接撐爆 td -->
-              <div class="max-w-lg break-words whitespace-pre-wrap">
-                <Collapse :bordered="false" :style="{ backgroundColor: 'transparent' }">
-                  <CollapsePanel :key="product.pid" :header="product.product_name">
-                    <p>{{ product.product_description }}</p>
-                  </CollapsePanel>
-                </Collapse>
-              </div>
             </td>
             <td class="p-2 border-b border-blue-100">{{ product.product_price }}</td>
             <td class="py-2 pl-2 border-b border-blue-100">{{ product.sales_condition }}</td>
@@ -185,14 +145,14 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
     <!-- Vuetify 組件 v-pagination 的 :length 為 0 時可能不渲染或報錯 -->
     <v-pagination v-if="totalPagesValue > 0" v-model="page" :length="totalPagesValue" :total-visible="7"></v-pagination>
 
-    <!-- Add/Edit Product Modal -->
+    <!-- Add/Edit Products Modal -->
     <AModal v-model:open="isModalVisible" :title="modalMode === 'add' ? '新增商品' : '編輯商品'" @ok="handleOk"
       @cancel="handleCancel" width="800px">
       <AForm :model="formState" layout="vertical">
-        <AFormItem label="Product Name (ZH)">
-          <AInput v-model:value="formState.product_name_zh" />
+        <AFormItem label="Products Name (ZH)">
+          <AInput v-model:value="formState.product_name" />
         </AFormItem>
-        <AFormItem label="Product Name (EN)">
+        <AFormItem label="Products Name (EN)">
           <AInput v-model:value="formState.product_name_en" />
         </AFormItem>
         <AFormItem label="Price">
@@ -207,11 +167,11 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
             <ASelectOption value="已下架">已下架</ASelectOption>
           </ASelect>
         </AFormItem>
-        <AFormItem label="Product Description (ZH)">
-          <AInput.TextArea v-model:value="formState.product_description" :rows="4" />
+        <AFormItem label="Products Description (ZH)">
+          <!-- <AInput.TextArea v-model:value="formState.product_description" :rows="4" /> -->
         </AFormItem>
-        <AFormItem label="Product Description (EN)">
-          <AInput.TextArea v-model:value="formState.product_description_en" :rows="4" />
+        <AFormItem label="Products Description (EN)">
+          <!-- <AInput.TextArea v-model:value="formState.product_description_en" :rows="4" /> -->
         </AFormItem>
         <AFormItem label="Image Filename" encType="multipart/form-data">
           <i class="pi pi-images" style="font-size: 2rem"></i>

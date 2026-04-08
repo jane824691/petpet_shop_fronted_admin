@@ -1,33 +1,30 @@
-import { PRODUCTS, PRODUCTS_ADD } from './config'
+import { PRODUCTS, ONE_PRODUCT, PRODUCTS_ADD } from './config'
+import type {
+    AddProductParams,
+    Images,
+    ProductDetailFormat,
+    ProductOneRaw,
+    SearchProductParams,
+} from '../types/productTypes'
 
-interface SearchProductParams {
-    page?: number
-    searchWord?: string
-    priceLow?: number
-    priceHigh?: number
-    sortBy?: string
-    tag?: number
-    lang?: string
-}
+const mapProductImageDto = (image: Images) => ({
+    photoPath: image.photo_path,
+    sortOrder: image.sort_order,
+})
 
-interface ProductFile {
-    productImg?: File
-    photoContentMain?: File
-    photoContentSecondary?: File
-    photoContent?: File
-}
-
-interface AddProductParams {
-    categoryId?: number,
-    productName?: string,
-    productPrice?: number,
-    stock?: number,
-    productDescription?: string,
-    productNameEn?: string,
-    productDescriptionEn?: string,
-    files?: ProductFile,
-    lang?: string
-}
+const productDetail = (data: ProductOneRaw): ProductDetailFormat => ({
+    pid: data.pid,
+    nameZh: data.product_name,
+    nameEn: data.product_name_en,
+    stock: data.stock,
+    salesCondition: data.sales_condition,
+    price: data.product_price,
+    descriptionZh: data.product_description,
+    descriptionEn: data.product_description_en,
+    productImg: data.product_img,
+    editTime: data.edit_time,
+    images: Array.isArray(data.images) ? data.images.map(mapProductImageDto) : [],
+})
 
 export const getProducts = async (params: SearchProductParams = {}) => {
     const {
@@ -55,7 +52,6 @@ export const getProducts = async (params: SearchProductParams = {}) => {
             headers: {
                 'Accept-Language': lang,
             },
-            cache: 'no-store',
         }
     )
 
@@ -63,7 +59,20 @@ export const getProducts = async (params: SearchProductParams = {}) => {
     return data
 }
 
-export const addProducts = async (params: AddProductParams = {}) => {
+export const getProduct = async (pid: number): Promise<ProductDetailFormat> => {
+    const response = await fetch(
+        ONE_PRODUCT + `/${pid}`,
+        {
+            headers: {
+                'Accept-Language': 'zh-TW',
+            },
+        }
+    )
+    const data = (await response.json()) as ProductOneRaw
+    return productDetail(data)
+}
+
+export const addProduct = async (params: AddProductParams) => {
     const {
         categoryId = 3,
         productName = '',
@@ -72,7 +81,8 @@ export const addProducts = async (params: AddProductParams = {}) => {
         productDescription = '',
         productNameEn = '',
         productDescriptionEn = '',
-        files = {},
+        product_img = '',
+        images = [],
         lang = 'zh-TW'
     } = params
 
@@ -86,19 +96,8 @@ export const addProducts = async (params: AddProductParams = {}) => {
     formData.append('product_name_en', productNameEn);
     formData.append('product_description_en', productDescriptionEn);
 
-    // 圖片（多張）
-    if (files.productImg)
-        formData.append('productImg', files.productImg);
-
-    if (files.photoContentMain)
-        formData.append('photoContentMain', files.photoContentMain);
-
-    if (files.photoContentSecondary)
-        formData.append('photoContentSecondary', files.photoContentSecondary);
-
-    if (files.photoContent)
-        formData.append('photoContent', files.photoContent);
-
+    if (product_img)
+        formData.append('product_img', product_img);
 
     const response = await fetch(
         PRODUCTS_ADD,
