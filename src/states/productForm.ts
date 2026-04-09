@@ -1,13 +1,16 @@
-import type { ProductsParams } from '../types/productTypes'
+import type { ProductDetailParams } from '../types/productTypes'
 
-export const initialProductsFormState = (): ProductsParams => ({
+export const initialProductFormState = (): ProductDetailParams => ({
   pid: 0,
-  categoryId: 0,
   nameZh: '',
   nameEn: '',
-  productPrice: 0,
   stock: 0,
   salesCondition: '上架中',
+  price: 0,
+  descriptionZh: '',
+  descriptionEn: '',
   productImg: '',
+  editTime: '',
+  images: [],
 })
 
