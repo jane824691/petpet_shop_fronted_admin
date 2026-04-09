@@ -1,8 +1,11 @@
 import { PRODUCTS, ONE_PRODUCT, PRODUCTS_ADD } from './config'
 import type {
     AddProductParams,
+    ProductsRaw,
+    ProductsParams,
+    ProductsListPageRaw,
     Images,
-    ProductDetailFormat,
+    ProductDetailParams,
     ProductOneRaw,
     SearchProductParams,
 } from '../types/productTypes'
@@ -12,7 +15,7 @@ const mapProductImageDto = (image: Images) => ({
     sortOrder: image.sort_order,
 })
 
-const productDetail = (data: ProductOneRaw): ProductDetailFormat => ({
+const productDetail = (data: ProductOneRaw): ProductDetailParams => ({
     pid: data.pid,
     nameZh: data.product_name,
     nameEn: data.product_name_en,
@@ -24,6 +27,17 @@ const productDetail = (data: ProductOneRaw): ProductDetailFormat => ({
     productImg: data.product_img,
     editTime: data.edit_time,
     images: Array.isArray(data.images) ? data.images.map(mapProductImageDto) : [],
+})
+
+const products = (data: ProductsRaw): ProductsParams => ({
+    pid: data.pid,
+    categoryId: data.category_id,
+    nameZh: data.product_name,
+    nameEn: data.product_name_en,
+    productPrice: data.product_price,
+    stock: data.stock,
+    salesCondition: data.sales_condition,
+    productImg: data.product_img,
 })
 
 export const getProducts = async (params: SearchProductParams = {}) => {
@@ -55,11 +69,17 @@ export const getProducts = async (params: SearchProductParams = {}) => {
         }
     )
 
-    const data = await response.json()
-    return data
+    const data = (await response.json()) as ProductsListPageRaw
+
+    return {
+        page: data.page,
+        totalPages: data.totalPages,
+        totalRows: data.totalRows,
+        rows: data.rows.map((row) => products(row)),
+    }
 }
 
-export const getProduct = async (pid: number): Promise<ProductDetailFormat> => {
+export const getProduct = async (pid: number): Promise<ProductDetailParams> => {
     const response = await fetch(
         ONE_PRODUCT + `/${pid}`,
         {

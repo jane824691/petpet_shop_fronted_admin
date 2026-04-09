@@ -1,3 +1,4 @@
+//* All products in list
 export interface SearchProductParams {
     page?: number
     searchWord?: string
@@ -7,13 +8,41 @@ export interface SearchProductParams {
     tag?: number
     lang?: string
 }
+export interface ProductsRaw {
+    pid: number;
+    category_id: number;
+    product_name: string;
+    product_price: number;
+    stock: number;
+    sales_condition: string;
+    product_img: string;
+    edit_time: string;
+    product_name_en: string;
+}
 
+export interface ProductsParams {
+    pid: number;
+    categoryId: number;
+    nameZh: string;
+    nameEn: string;
+    productPrice: number;
+    stock: number;
+    salesCondition: string;
+    productImg: string;
+}
+export interface ProductsListPageRaw {
+    page: number;
+    totalPages: number;
+    totalRows: number;
+    rows: ProductsRaw[];
+}
 export interface Images {
     photo_path?: string
     sort_order?: number
 }
 
-// original data from api
+
+//* Single product in details
 export interface ProductOneRaw {
     pid: number
     product_name: string
@@ -34,7 +63,7 @@ export interface ProductImages {
     sortOrder?: number
 }
 
-export interface ProductDetailFormat {
+export interface ProductDetailParams {
     pid: number
     nameZh: string
     nameEn: string
@@ -46,18 +75,6 @@ export interface ProductDetailFormat {
     productImg: string
     editTime: string
     images?: ProductImages[]
-}
-
-export interface Products {
-    pid: number;
-    category_id: number;
-    product_name: string;
-    product_price: number;
-    stock: number;
-    sales_condition: string;
-    product_img: string;
-    edit_time: string;
-    product_name_en: string;
 }
 
 export interface AddProductParams {

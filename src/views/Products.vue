@@ -3,24 +3,23 @@ import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { getProducts } from '../api/productApi'
-import type { Products } from '../types/productTypes'
+import type { ProductsParams } from '../types/productTypes'
 import { initialProductsFormState } from '../states/productForm'
 
 
 const isModalVisible = ref(false);
 const modalMode = ref<'add' | 'edit'>('add');
-const editingProduct = ref<Products | null>(null);
+const editingProduct = ref<ProductsParams | null>(null);
 const page = ref(1) // Vue用ref雙向綁定資料, 1為預設頁數
-const products = ref<{ rows: Products[] }>({ rows: [] }); // 等同React： const [products, setProducts] = useState({ rows: [] })
+const products = ref<{ rows: ProductsParams[] }>({ rows: [] }); // 等同React： const [products, setProducts] = useState({ rows: [] })
 const totalPagesValue = ref<number>(0);
 const formState = reactive(initialProductsFormState());
 
 // 呼叫api: 商品總清單
 const init = async () => {
-  const response = await getProducts({ page: page.value }); // 餵回給api當前頁數在第幾頁
-  products.value = response as { rows: Products[] };
-  const totalPages = Number((response as { totalPages: number }).totalPages) || 1; 1;
-  totalPagesValue.value = totalPages;
+  const response = await getProducts({ page: page.value })
+  products.value.rows = (response as { rows: ProductsParams[] }).rows
+  totalPagesValue.value = Number((response as { totalPages: number }).totalPages) || 1
 }
 const DEFAULT_IMG = '@public/images/product/638348807730300000 (1).jfif'
 
@@ -34,20 +33,18 @@ const getImagePath = (image?: string | null) => {
 onMounted(init);
 
 // 監聽page的變化，如果page的變化，則重新初始化，類似useEffect
-watch(page, () => {
-  init();
-})
+watch(page, init)
 
-const openModal = (mode: 'add' | 'edit', product?: Products) => {
+const openModal = (mode: 'add' | 'edit', product?: ProductsParams) => {
   modalMode.value = mode;
-  if (mode === 'edit' && product) {
-    editingProduct.value = product;
-    Object.assign(formState, product);
-  } else {
-    editingProduct.value = null;
-    Object.assign(formState, initialProductsFormState());
-    formState.pid = Math.floor(Math.random() * 1000) + 300; // 臨時的 pid
-  }
+  // if (mode === 'edit' && product) {
+  //   editingProduct.value = product;
+  //   Object.assign(formState, product);
+  // } else {
+  //   editingProduct.value = null;
+  //   Object.assign(formState, initialProductsFormState());
+  //   formState.pid = Math.floor(Math.random() * 1000) + 300; // 臨時的 pid
+  // }
   isModalVisible.value = true;
 };
 
@@ -62,7 +59,7 @@ const handleOk = () => {
     if (editingProduct.value) {
       const index = products.value.rows.findIndex(p => p.pid === editingProduct.value!.pid);
       if (index !== -1) {
-        products.value.rows[index] = { ...formState, edit_time: new Date().toISOString() };
+        // products.value.rows[index] = { ...formState, edit_time: new Date().toISOString() };
       }
     }
     console.log('Saving:', formState);
@@ -117,10 +114,11 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
           <tr v-for="(product, index) in products.rows" :key="product.pid" :class="index % 2 === 1 ? 'bg-blue-50' : ''">
             <td class="py-2 pl-4 border-b border-blue-100">{{ product.pid }}</td>
             <td class="p-2 border-b border-blue-100">
-              <img :src=getImagePath(product.product_img) alt="產品圖片" class="h-12 w-12 object-cover rounded" />
+              <img :src=getImagePath(product.productImg) alt="產品圖片" class="h-12 w-12 object-cover rounded" />
             </td>
-            <td class="p-2 border-b border-blue-100">{{ product.product_price }}</td>
-            <td class="py-2 pl-2 border-b border-blue-100">{{ product.sales_condition }}</td>
+            <td class="p-2 border-b border-blue-100">{{ product.nameZh }}</td>
+            <td class="p-2 border-b border-blue-100">{{ product.productPrice }}</td>
+            <td class="py-2 pl-2 border-b border-blue-100">{{ product.salesCondition }}</td>
             <!-- 點擊click事件觸發openModal('edit', product)同時把product資料傳遞給openModal函式 -->
             <td class="p-2 border-b border-blue-100"><font-awesome-icon :icon="['fas', 'pen-to-square']"
                 class="inline-block size-4 text-blue-500" @click="openModal('edit', product)" /></td>
@@ -150,22 +148,22 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
       @cancel="handleCancel" width="800px">
       <AForm :model="formState" layout="vertical">
         <AFormItem label="Products Name (ZH)">
-          <AInput v-model:value="formState.product_name" />
+          <!-- <AInput v-model:value="formState.product_name" /> -->
         </AFormItem>
         <AFormItem label="Products Name (EN)">
-          <AInput v-model:value="formState.product_name_en" />
+          <!-- <AInput v-model:value="formState.product_name_en" /> -->
         </AFormItem>
         <AFormItem label="Price">
-          <AInputNumber v-model:value="formState.product_price" :min="0" style="width: 100%" />
+          <!-- <AInputNumber v-model:value="formState.product_price" :min="0" style="width: 100%" /> -->
         </AFormItem>
         <AFormItem label="Stock">
-          <AInputNumber v-model:value="formState.stock" :min="0" style="width: 100%" />
+          <!-- <AInputNumber v-model:value="formState.stock" :min="0" style="width: 100%" /> -->
         </AFormItem>
         <AFormItem label="Sales Condition">
-          <ASelect v-model:value="formState.sales_condition">
+          <!-- <ASelect v-model:value="formState.sales_condition">
             <ASelectOption value="上架中">上架中</ASelectOption>
             <ASelectOption value="已下架">已下架</ASelectOption>
-          </ASelect>
+          </ASelect> -->
         </AFormItem>
         <AFormItem label="Products Description (ZH)">
           <!-- <AInput.TextArea v-model:value="formState.product_description" :rows="4" /> -->
@@ -175,9 +173,9 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
         </AFormItem>
         <AFormItem label="Image Filename" encType="multipart/form-data">
           <i class="pi pi-images" style="font-size: 2rem"></i>
-          <img v-if="modalMode === 'edit'" :src=getImagePath(formState.product_img)
+          <!-- <img v-if="modalMode === 'edit'" :src=getImagePath(formState.product_img)
             alt="產品圖片"
-            class="h-64 w-64 object-cover rounded" />
+            class="h-64 w-64 object-cover rounded" /> -->
         </AFormItem>
       </AForm>
     </AModal>
