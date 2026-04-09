@@ -50,6 +50,9 @@ const openModal = async (mode: 'add' | 'edit', pid?: number) => {
       editingProduct.value = productDetail.value;
       Object.assign(formState, productDetail.value);
     }
+  } else {
+    editingProduct.value = null;
+    Object.assign(formState, initialProductFormState);
   }
   isModalVisible.value = true;
 };
@@ -178,10 +181,26 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
           <AInput.TextArea v-model:value="formState.descriptionEn" :rows="4" />
         </AFormItem>
         <AFormItem label="Image Filename" encType="multipart/form-data">
-          <i class="pi pi-images" style="font-size: 2rem"></i>
-          <img v-if="modalMode === 'edit'" :src=getImagePath(formState.productImg)
-            alt="產品圖片"
-            class="h-64 w-64 object-cover rounded" />
+          <AFormItem label="Main Image"
+            :rules="[{ required: modalMode === 'add' || modalMode === 'edit', message: '請上傳主圖' }]">
+            <i class="pi pi-images" style="font-size: 6rem"></i>
+            <div v-if="modalMode === 'add'">
+              <AInput type="file" @change="" />
+            </div>
+            <div v-if="modalMode === 'edit'">
+              <img :src=getImagePath(formState.productImg) alt="產品圖片" class="h-32 w-32 object-cover rounded" />
+              <AInput type="file" @change="" />
+            </div>
+          </AFormItem>
+          <AFormItem label="Other Images">
+            <div class="flex flex-nowrap gap-2">
+              <div v-if="modalMode === 'edit'" class="flex flex-nowrap gap-2">
+                <img v-for="image in formState.images" :key="image.sortOrder" :src=getImagePath(image.photoPath)
+                  alt="產品圖片" class="h-32 w-32 object-cover rounded" />
+              </div>
+            </div>
+            <AInput type="file" @change="" />
+          </AFormItem>
         </AFormItem>
       </AForm>
     </AModal>
