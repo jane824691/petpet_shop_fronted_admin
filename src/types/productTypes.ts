@@ -65,6 +65,7 @@ export interface ProductImages {
 
 export interface ProductDetailParams {
     pid: number
+    categoryId: number
     nameZh: string
     nameEn: string
     stock: number

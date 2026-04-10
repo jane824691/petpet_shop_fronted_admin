@@ -2,6 +2,7 @@ import type { ProductDetailParams } from '../types/productTypes'
 
 export const initialProductFormState = (): ProductDetailParams => ({
   pid: 0,
+  categoryId: 3,
   nameZh: '',
   nameEn: '',
   stock: 0,

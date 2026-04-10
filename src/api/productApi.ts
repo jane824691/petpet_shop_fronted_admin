@@ -17,6 +17,7 @@ const mapProductImageDto = (image: Images) => ({
 
 const productDetail = (data: ProductOneRaw): ProductDetailParams => ({
     pid: data.pid,
+    categoryId: data.category_id,
     nameZh: data.product_name,
     nameEn: data.product_name_en,
     stock: data.stock,

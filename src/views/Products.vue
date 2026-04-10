@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, watch } from 'vue'
-import { Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption } from 'ant-design-vue';
+import { Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption, Upload as AUpload } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { getProducts, getProduct } from '../api/productApi'
 import type { ProductsParams, ProductDetailParams } from '../types/productTypes'
 import { initialProductFormState } from '../states/productForm'
+import { PlusOutlined } from '@ant-design/icons-vue';
+import type { UploadProps } from 'ant-design-vue';
+import type { UploadFile } from 'ant-design-vue/es/upload/interface';
+import type { ProductImages } from '../types/productTypes'
+import draggable from 'vuedraggable'
 
 
 const isModalVisible = ref(false);
@@ -15,6 +20,89 @@ const products = ref<{ rows: ProductsParams[] }>({ rows: [] }); // 等同React�
 const productDetail = ref<ProductDetailParams | null>(null);
 const totalPagesValue = ref<number>(0);
 const formState = reactive(initialProductFormState());
+
+const previewVisible = ref(false);
+const previewImage = ref('');
+const previewTitle = ref('');
+const mainImageRequiredError = ref('');
+const mainFileList = ref<UploadFile[]>([]);
+const galleryFileList = ref<UploadFile[]>([]);
+const productFormRef = ref();
+
+const customRequest: UploadProps['customRequest'] = (options) => {
+  const { onSuccess } = options
+  setTimeout(() => {
+    onSuccess?.({})
+  }, 0)
+}
+
+function imagesToUploadFileList(images: ProductImages[] | undefined): UploadFile[] {
+  if (!images?.length) return []
+  return images
+    .filter((img) => typeof img.photoPath === 'string' && img.photoPath.trim() !== '')
+    .map((img, i) => {
+      const path = (img.photoPath as string).trim()
+    const name = path.includes('/') ? path.slice(path.lastIndexOf('/') + 1) : path || `image-${i + 1}`
+    return {
+      uid: `existing-${img.sortOrder ?? i}-${i}`,
+      name,
+      status: 'done',
+      url: getImagePath(path),
+    }
+    })
+}
+
+function productImgToUploadFileList(productImg?: string): UploadFile[] {
+  if (!productImg) return []
+  return [
+    {
+      uid: 'main-existing',
+      name: productImg.includes('/') ? productImg.slice(productImg.lastIndexOf('/') + 1) : productImg,
+      status: 'done',
+      url: getImagePath(productImg),
+    }
+  ]
+}
+
+async function getPreviewSrc(file: UploadFile): Promise<string> {
+  if (file.url) return file.url
+  if (typeof file.preview === 'string') return file.preview
+  if (file.originFileObj) {
+    const base64 = await getBase64(file.originFileObj as File)
+    file.preview = base64
+    return base64
+  }
+  return ''
+}
+
+function syncGalleryImagesToForm() {
+  formState.images = galleryFileList.value.map((file, i) => ({
+    photoPath: file.url || file.name,
+    sortOrder: i + 1,
+  }))
+}
+
+// 主預覽圖
+const handleMainChange: UploadProps['onChange'] = ({ fileList }) => {
+  mainImageRequiredError.value = ''
+  mainFileList.value = fileList.slice(-1)
+}
+
+// 多圖牆
+const handleGalleryChange: UploadProps['onChange'] = ({ fileList }) => {
+  galleryFileList.value = fileList.slice(0, 3)
+  syncGalleryImagesToForm()
+}
+
+const removeGalleryImage = (uid: string) => {
+  galleryFileList.value = galleryFileList.value.filter((file) => file.uid !== uid)
+  syncGalleryImagesToForm()
+}
+
+const onGallerySortEnd = () => {
+  syncGalleryImagesToForm()
+}
+
 
 // 呼叫api: 商品總清單
 const init = async () => {
@@ -49,15 +137,32 @@ const openModal = async (mode: 'add' | 'edit', pid?: number) => {
     if (productDetail.value) {
       editingProduct.value = productDetail.value;
       Object.assign(formState, productDetail.value);
+      mainFileList.value = productImgToUploadFileList(formState.productImg)
+      galleryFileList.value = imagesToUploadFileList(formState.images)
     }
   } else {
     editingProduct.value = null;
-    Object.assign(formState, initialProductFormState);
+    Object.assign(formState, initialProductFormState());
+    mainFileList.value = []
+    galleryFileList.value = []
   }
+  mainImageRequiredError.value = ''
   isModalVisible.value = true;
 };
 
-const handleOk = () => {
+const handleOk = async () => {
+  try {
+    await productFormRef.value?.validate()
+  } catch {
+    return
+  }
+  if (!mainFileList.value.length) {
+    mainImageRequiredError.value = '主圖為必填'
+    return
+  }
+  const mainSrc = await getPreviewSrc(mainFileList.value[0])
+  formState.productImg = mainFileList.value[0].url || mainSrc || mainFileList.value[0].name || ''
+  syncGalleryImagesToForm()
   if (modalMode.value === 'add') {
     // 新增邏輯
     // const newProduct = { ...formState, edit_time: new Date().toISOString() };
@@ -92,6 +197,27 @@ const toggleSelect = (pid: number) => {
     selectedProducts.add(pid); // 增加選取
   }
 }
+
+
+function getBase64(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('read failed'));
+  });
+}
+
+const handleImgCancel = () => {
+  previewVisible.value = false;
+  previewTitle.value = '';
+};
+const handlePreview = async (file: UploadFile) => {
+  previewImage.value = await getPreviewSrc(file);
+  previewVisible.value = true;
+  const src = file.url || previewImage.value || '';
+  previewTitle.value = file.name || (src.includes('/') ? src.slice(src.lastIndexOf('/') + 1) : src) || '';
+};
 
 </script>
 
@@ -155,52 +281,73 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
     <!-- Add/Edit Products Modal -->
     <AModal v-model:open="isModalVisible" :title="modalMode === 'add' ? '新增商品' : '編輯商品'" @ok="handleOk"
       @cancel="handleCancel" width="800px">
-      <AForm :model="formState" layout="vertical">
-        <AFormItem label="Products Name (ZH)">
-          <AInput v-model:value="formState.nameZh" />
+      <AForm ref="productFormRef" :model="formState" layout="vertical">
+        <AFormItem v-if="modalMode === 'edit'" label="Product ID">
+          <div>{{ editingProduct?.pid }}</div>
         </AFormItem>
-        <AFormItem label="Products Name (EN)">
-          <AInput v-model:value="formState.nameEn" />
+        <AFormItem label="Category" name="categoryId" required :rules="[{ required: true, message: '請選擇分類' }]">
+          <ASelect v-model:value="formState.categoryId" placeholder="請選擇商品分類">
+            <ASelectOption :value="1">狗狗</ASelectOption>
+            <ASelectOption :value="2">貓咪</ASelectOption>
+            <ASelectOption :value="3">其他</ASelectOption>
+          </ASelect>
         </AFormItem>
-        <AFormItem label="Price">
-          <AInputNumber v-model:value="formState.price" :min="0" style="width: 100%" />
+        <AFormItem label="Products Name (ZH)" name="nameZh" required :rules="[{ required: true, message: '請輸入中文商品名稱' }]">
+          <AInput v-model:value="formState.nameZh" placeholder="請輸入中文商品名稱" />
         </AFormItem>
-        <AFormItem label="Stock">
-          <AInputNumber v-model:value="formState.stock" :min="0" style="width: 100%" />
+        <AFormItem label="Products Name (EN)" name="nameEn" required :rules="[{ required: true, message: '請輸入英文商品名稱' }]">
+          <AInput v-model:value="formState.nameEn" placeholder="請輸入英文商品名稱" />
         </AFormItem>
-        <AFormItem label="Sales Condition">
+        <AFormItem label="Price" name="price" required :rules="[{ required: true, message: '請輸入商品價格' }]">
+          <AInputNumber v-model:value="formState.price" :min="0" style="width: 100%" placeholder="請輸入商品價格" />
+        </AFormItem>
+        <AFormItem label="Stock" name="stock" required :rules="[{ required: true, message: '請輸入庫存數量' }]">
+          <AInputNumber v-model:value="formState.stock" :min="0" style="width: 100%" placeholder="請輸入庫存數量" />
+        </AFormItem>
+        <AFormItem label="Sales Condition" required>
           <ASelect v-model:value="formState.salesCondition">
             <ASelectOption value="上架中">上架中</ASelectOption>
             <ASelectOption value="已下架">已下架</ASelectOption>
           </ASelect>
         </AFormItem>
-        <AFormItem label="Products Description (ZH)">
-          <AInput.TextArea v-model:value="formState.descriptionZh" :rows="4" />
+        <AFormItem label="Products Description (ZH)" name="descriptionZh" required :rules="[{ required: true, message: '請輸入中文商品描述' }]">
+          <AInput.TextArea v-model:value="formState.descriptionZh" :rows="4" placeholder="請輸入中文商品描述" />
         </AFormItem>
-        <AFormItem label="Products Description (EN)">
-          <AInput.TextArea v-model:value="formState.descriptionEn" :rows="4" />
+        <AFormItem label="Products Description (EN)" name="descriptionEn" required :rules="[{ required: true, message: '請輸入英文商品描述' }]">
+          <AInput.TextArea v-model:value="formState.descriptionEn" :rows="4" placeholder="請輸入英文商品描述" />
         </AFormItem>
-        <AFormItem label="Image Filename" encType="multipart/form-data">
-          <AFormItem label="Main Image"
-            :rules="[{ required: modalMode === 'add' || modalMode === 'edit', message: '請上傳主圖' }]">
-            <i class="pi pi-images" style="font-size: 6rem"></i>
-            <div v-if="modalMode === 'add'">
-              <AInput type="file" @change="" />
+        <AFormItem label="主預覽圖" required>
+          <AUpload :file-list="mainFileList" :max-count="1" list-type="picture-card" :custom-request="customRequest"
+            @change="handleMainChange" @preview="handlePreview">
+            <div v-if="mainFileList.length < 1">
+              <PlusOutlined />
+              <div style="margin-top: 8px">Upload</div>
             </div>
-            <div v-if="modalMode === 'edit'">
-              <img :src=getImagePath(formState.productImg) alt="產品圖片" class="h-32 w-32 object-cover rounded" />
-              <AInput type="file" @change="" />
+          </AUpload>
+          <div v-if="mainImageRequiredError" class="text-red-500 text-sm mt-1">{{ mainImageRequiredError }}</div>
+        </AFormItem>
+
+        <AFormItem label="其他圖片（選填，最多3張，可拖曳排序）">
+          <AUpload :file-list="galleryFileList" :max-count="3" list-type="picture-card" :custom-request="customRequest"
+            @change="handleGalleryChange" @preview="handlePreview">
+            <div v-if="galleryFileList.length < 3">
+              <PlusOutlined />
+              <div style="margin-top: 8px">Upload</div>
             </div>
-          </AFormItem>
-          <AFormItem label="Other Images">
-            <div class="flex flex-nowrap gap-2">
-              <div v-if="modalMode === 'edit'" class="flex flex-nowrap gap-2">
-                <img v-for="image in formState.images" :key="image.sortOrder" :src=getImagePath(image.photoPath)
-                  alt="產品圖片" class="h-32 w-32 object-cover rounded" />
+          </AUpload>
+          <draggable v-model="galleryFileList" item-key="uid" class="grid grid-cols-3 gap-3 mt-3" @end="onGallerySortEnd">
+            <template #item="{ element, index }">
+              <div class="border rounded p-2 bg-white">
+                <div class="text-xs mb-2">排序 {{ index + 1 }}</div>
+                <img :src="element.url || element.thumbUrl || element.preview || ''" class="w-full h-28 object-cover rounded cursor-pointer"
+                  @click="handlePreview(element)" />
+                <AButton class="mt-2" danger block @click="removeGalleryImage(element.uid)">刪除</AButton>
               </div>
-            </div>
-            <AInput type="file" @change="" />
-          </AFormItem>
+            </template>
+          </draggable>
+          <AModal v-model:open="previewVisible" :title="previewTitle" :footer="null" @cancel="handleImgCancel">
+            <img alt="" style="width: 100%" :src="previewImage" />
+          </AModal>
         </AFormItem>
       </AForm>
     </AModal>
