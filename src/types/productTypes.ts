@@ -8,18 +8,6 @@ export interface SearchProductParams {
     tag?: number
     lang?: string
 }
-export interface ProductsRaw {
-    pid: number;
-    category_id: number;
-    product_name: string;
-    product_price: number;
-    stock: number;
-    sales_condition: string;
-    product_img: string;
-    edit_time: string;
-    product_name_en: string;
-}
-
 export interface ProductsParams {
     pid: number;
     categoryId: number;
@@ -34,7 +22,7 @@ export interface ProductsListPageRaw {
     page: number;
     totalPages: number;
     totalRows: number;
-    rows: ProductsRaw[];
+    rows: ProductsParams[];
 }
 export interface Images {
     photo_path?: string
