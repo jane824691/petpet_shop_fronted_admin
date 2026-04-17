@@ -18,8 +18,8 @@ const editingProduct = ref<ProductDetailParams | null>(null);
 const page = ref(1) // Vue用ref雙向綁定資料, 1為預設頁數
 const products = ref<{ rows: ProductsParams[] }>({ rows: [] }); // 等同React： const [products, setProducts] = useState({ rows: [] })
 const productDetail = ref<ProductDetailParams | null>(null);
-const totalPagesValue = ref<number>(0);
-const formState = reactive(initialProductFormState());
+const totalPagesValue = ref<number>(0); // 較簡單的數值管理, 使用ref
+const formState = reactive(initialProductFormState()); // 更複雜的物件陣列管理, 使用reactive
 
 const previewVisible = ref(false);
 const previewImage = ref('');

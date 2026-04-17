@@ -24,28 +24,6 @@ export interface ProductsListPageRaw {
     totalRows: number;
     rows: ProductsParams[];
 }
-export interface Images {
-    photo_path?: string
-    sort_order?: number
-}
-
-
-//* Single product in details
-export interface ProductOneRaw {
-    pid: number
-    product_name: string
-    product_name_en: string
-    stock: number
-    category_id: number // no use, temporarily
-    sales_condition: string
-    product_price: number
-    product_description: string
-    product_description_en: string
-    product_img: string
-    edit_time: string
-    images?: Images[]
-}
-
 export interface ProductImages {
     photoPath?: string
     sortOrder?: number
@@ -75,6 +53,6 @@ export interface AddProductParams {
     productNameEn?: string
     productDescriptionEn?: string
     product_img: string
-    images: Images[]
+    images: ProductImages[]
     lang?: string
 }

@@ -3,31 +3,9 @@ import type {
     AddProductParams,
     ProductsParams,
     ProductsListPageRaw,
-    Images,
     ProductDetailParams,
-    ProductOneRaw,
     SearchProductParams,
 } from '../types/productTypes'
-
-const mapProductImageDto = (image: Images) => ({
-    photoPath: image.photo_path,
-    sortOrder: image.sort_order,
-})
-
-const productDetail = (data: ProductOneRaw): ProductDetailParams => ({
-    pid: data.pid,
-    categoryId: data.category_id,
-    nameZh: data.product_name,
-    nameEn: data.product_name_en,
-    stock: data.stock,
-    salesCondition: data.sales_condition,
-    price: data.product_price,
-    descriptionZh: data.product_description,
-    descriptionEn: data.product_description_en,
-    productImg: data.product_img,
-    editTime: data.edit_time,
-    images: Array.isArray(data.images) ? data.images.map(mapProductImageDto) : [],
-})
 
 export const getProducts = async (params: SearchProductParams = {}) => {
     const {
@@ -77,8 +55,7 @@ export const getProduct = async (pid: number): Promise<ProductDetailParams> => {
             },
         }
     )
-    const data = (await response.json()) as ProductOneRaw
-    return productDetail(data)
+    return (await response.json()) as ProductDetailParams
 }
 
 export const addProduct = async (params: AddProductParams) => {
