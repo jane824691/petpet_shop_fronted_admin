@@ -1,18 +1,30 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { getLogin } from '../api/memberApi'
+import { message } from 'ant-design-vue'
 
 const router = useRouter()
+const account = ref('')
+const password = ref('')
 const isLoading = ref(false)
-const handleLogin = () => {
+const handleLogin =  async () => {
   isLoading.value = true
-  // Simulate a login process
-  setTimeout(() => {
+  try {
+    const response = await getLogin({ account: account.value, password: password.value })
+    if (response.success === true) {
+      message.success('Login successful')
+      router.push('/members')
+      return
+    } else if ( response.success === false){
+      message.error('account or password is incorrect')
+      return
+    }
+  } finally {
     isLoading.value = false
-    // Redirect to members page after login
-    router.push('/members')
-  }, 2000)
+  }
 }
+
 
 </script>
 
@@ -25,19 +37,19 @@ const handleLogin = () => {
       <form class="mt-4 space-y-5" @submit.prevent="handleLogin">
         <div class="-space-y-px rounded-md shadow-md">
           <div>
-            <input type="email" autocomplete="email" required
+            <input v-model="account" type="text" required
               class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400 sm:text-sm"
               placeholder="帳號" />
           </div>
           <div>
-            <input type="password" autocomplete="current-password" required
+            <input v-model="password" type="password" autocomplete="current-password" required
               class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400 sm:text-sm"
               placeholder="密碼" />
           </div>
         </div>
 
         <div>
-          <button type="submit"
+          <button type="submit" :disabled="isLoading"
             class="relative flex w-full justify-center rounded-md  border border-transparent bg-sky-300 py-3 text-sm font-medium text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 disabled:bg-sky-400">
             <span v-if="isLoading">
               <svg class="-ml-1 mr-3 h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
