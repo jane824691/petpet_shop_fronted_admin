@@ -1,4 +1,4 @@
-import { LOGIN } from './config'
+import { AUTH_CHECK, LOGIN, LOGOUT } from './config'
 import type {
     LoginParams,
     LoginResponse
@@ -17,4 +17,14 @@ export const getLogin = async (params: Partial<LoginParams> = {
         },
     })
     return (await response.json()) as LoginResponse
+}
+
+export const postLogout = async () => {
+    await fetch(LOGOUT, { method: 'POST', credentials: 'include' })
+}
+
+export const checkAuth = async () => {
+    const res = await fetch(AUTH_CHECK, { credentials: 'include' })
+    if (res.status === 401 || res.status === 403) return false
+    return res.ok
 }

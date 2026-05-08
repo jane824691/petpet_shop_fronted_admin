@@ -30,11 +30,13 @@ export const getProducts = async (params: SearchProductParams = {}) => {
     const response = await fetch(
         PRODUCTS + `?${queryParams.toString()}`,
         {
+            credentials: 'include',
             headers: {
                 'Accept-Language': lang,
             },
         }
     )
+    if (response.status === 401 || response.status === 403) location.assign('/login')
 
     const data = (await response.json()) as ProductsListPageRaw
 
@@ -50,11 +52,13 @@ export const getProduct = async (pid: number): Promise<ProductDetailParams> => {
     const response = await fetch(
         ONE_PRODUCT + `/${pid}`,
         {
+            credentials: 'include',
             headers: {
                 'Accept-Language': 'zh-TW',
             },
         }
     )
+    if (response.status === 401 || response.status === 403) location.assign('/login')
     return (await response.json()) as ProductDetailParams
 }
 
@@ -89,12 +93,14 @@ export const addProduct = async (params: AddProductParams) => {
         PRODUCTS_ADD,
         {
             method: 'POST',
+            credentials: 'include',
             body: formData,
             headers: {
                 'Accept-Language': lang,
             }
         }
     )
+    if (response.status === 401 || response.status === 403) location.assign('/login')
 
     const data = await response.json()
     return data

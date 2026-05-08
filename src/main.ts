@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
+import { pinia } from './pinia'
 import './style.css'
 import 'ant-design-vue/dist/reset.css';
 import 'primeicons/primeicons.css'
@@ -28,7 +28,5 @@ const vuetify = createVuetify({
   components,
   directives,
 })
-
-const pinia = createPinia()
 
 createApp(App).use(router).use(pinia).use(vuetify).component('font-awesome-icon', FontAwesomeIcon).mount('#app')

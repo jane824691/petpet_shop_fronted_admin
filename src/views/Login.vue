@@ -3,8 +3,10 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getLogin } from '../api/memberApi'
 import { message } from 'ant-design-vue'
+import { useUserStore } from '../stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 const account = ref('')
 const password = ref('')
 const isLoading = ref(false)
@@ -13,8 +15,9 @@ const handleLogin =  async () => {
   try {
     const response = await getLogin({ account: account.value, password: password.value })
     if (response.success === true) {
+      userStore.login(account.value)
       message.success('Login successful')
-      router.push('/members')
+      router.push('/')
       return
     } else if ( response.success === false){
       message.error('account or password is incorrect')
