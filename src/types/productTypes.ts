@@ -13,7 +13,7 @@ export interface ProductsParams {
     categoryId: number;
     nameZh: string;
     nameEn: string;
-    productPrice: number;
+    price: number;
     stock: number;
     salesCondition: string;
     productImg: string;
@@ -46,13 +46,13 @@ export interface ProductDetailParams {
 
 export interface AddProductParams {
     categoryId?: number
-    productName?: string
-    productPrice?: number
-    stock?: number
-    productDescription?: string
-    productNameEn?: string
-    productDescriptionEn?: string
-    product_img: string
-    images: ProductImages[]
+    nameZh?: string
+    nameEn?: string
+    price: number
+    stock: number
+    descriptionZh?: string
+    descriptionEn?: string
+    productImg: string
+    images?: ProductImages[]
     lang?: string
 }

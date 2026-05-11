@@ -65,29 +65,29 @@ export const getProduct = async (pid: number): Promise<ProductDetailParams> => {
 export const addProduct = async (params: AddProductParams) => {
     const {
         categoryId = 3,
-        productName = '',
-        productPrice = 0,
+        nameZh = '',
+        price = 0,
         stock = 0,
-        productDescription = '',
-        productNameEn = '',
-        productDescriptionEn = '',
-        product_img = '',
+        descriptionZh = '',
+        nameEn = '',
+        descriptionEn = '',
+        productImg = '',
         images = [],
         lang = 'zh-TW'
     } = params
 
     const formData = new FormData();
 
-    formData.append('category_id', String(categoryId));
-    formData.append('product_name', productName);
-    formData.append('product_price', String(productPrice));
+    formData.append('categoryId', String(categoryId));
+    formData.append('nameZh', nameZh);
+    formData.append('price', String(price));
     formData.append('stock', String(stock));
-    formData.append('product_description', productDescription);
-    formData.append('product_name_en', productNameEn);
-    formData.append('product_description_en', productDescriptionEn);
+    formData.append('descriptionZh', descriptionZh);
+    formData.append('nameEn', nameEn);
+    formData.append('descriptionEn', descriptionEn);
 
-    if (product_img)
-        formData.append('product_img', product_img);
+    if (productImg)
+        formData.append('productImg', productImg);
 
     const response = await fetch(
         PRODUCTS_ADD,

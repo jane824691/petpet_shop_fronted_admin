@@ -28,6 +28,11 @@ const handleLogin =  async () => {
   }
 }
 
+const quickSample = () => {
+  account.value = 'FANG'
+  password.value = 'LH123456'
+}
+
 
 </script>
 
@@ -35,7 +40,8 @@ const handleLogin =  async () => {
   <div class="flex min-h-screen items-center w-screen justify-center bg-gray-100">
     <div class="w-full max-w-md">
       <div class="text-center font-bold pb-2">Admin</div>
-      <div class="text-center font-bold pb-2">登入</div>
+      <div class="text-center font-bold pb-2">登入 <span @click="quickSample" class="text-red-500">*</span></div>
+      <!-- <div class="text-center font-bold pb-2 text-gray-500" @click="quickSample">快速帶入測試用帳密</div> -->
 
       <form class="mt-4 space-y-5" @submit.prevent="handleLogin">
         <div class="-space-y-px rounded-md shadow-md">

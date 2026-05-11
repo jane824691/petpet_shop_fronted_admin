@@ -2,8 +2,8 @@
 import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption, Upload as AUpload } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { getProducts, getProduct } from '../api/productApi'
-import type { ProductsParams, ProductDetailParams } from '../types/productTypes'
+import { getProducts, getProduct, addProduct } from '../api/productApi'
+import type { ProductsParams, ProductDetailParams, AddProductParams } from '../types/productTypes'
 import { initialProductFormState } from '../states/productForm'
 import { PlusOutlined } from '@ant-design/icons-vue';
 import type { UploadProps } from 'ant-design-vue';
@@ -125,6 +125,10 @@ const getProductDetail = async (pid: number) => {
   console.log('productDetail======', productDetail.value);
 }
 
+const addProductApi = async (formState: AddProductParams) => {
+  const response = await addProduct(formState);
+  console.log('response======', response);
+}
 onMounted(init);
 
 // 監聽page的變化，如果page的變化，則重新初始化，類似useEffect
@@ -160,20 +164,29 @@ const handleOk = async () => {
     mainImageRequiredError.value = '主圖為必填'
     return
   }
+  const keepFilename = (p: string) => (p.includes('/') ? p.slice(p.lastIndexOf('/') + 1) : p)
   const mainSrc = await getPreviewSrc(mainFileList.value[0])
   formState.productImg = mainFileList.value[0].url || mainSrc || mainFileList.value[0].name || ''
   syncGalleryImagesToForm()
+  if (formState.productImg) formState.productImg = keepFilename(formState.productImg)
+  if (formState.images?.length) {
+    formState.images = formState.images.map((img) => ({
+      ...img,
+      photoPath: typeof img.photoPath === 'string' ? keepFilename(img.photoPath) : img.photoPath,
+    }))
+  }
   if (modalMode.value === 'add') {
     // 新增邏輯
-    // const newProduct = { ...formState, edit_time: new Date().toISOString() };
+    const newProduct = { ...formState };
     // products.value.rows.unshift(newProduct);
-    // console.log('Adding:', newProduct);
+    console.log('Adding:', newProduct);
+    addProductApi(newProduct);
   } else {
     // 編輯邏輯
     if (editingProduct.value) {
       const index = products.value.rows.findIndex(p => p.pid === editingProduct.value!.pid);
       if (index !== -1) {
-        // products.value.rows[index] = { ...formState, edit_time: new Date().toISOString() };
+        // products.value.rows[index] = { ...formState };
       }
     }
     console.log('Saving:', formState);
@@ -219,6 +232,37 @@ const handlePreview = async (file: UploadFile) => {
   previewTitle.value = file.name || (src.includes('/') ? src.slice(src.lastIndexOf('/') + 1) : src) || '';
 };
 
+const sampleData = () => {
+  formState.nameZh = '測試商品'
+  formState.nameEn = 'Test Product'
+  formState.price = 100
+  formState.stock = 100
+  formState.salesCondition = '上架中'
+  formState.descriptionZh = '測試商品描述'
+  formState.descriptionEn = 'Test Product Description'
+  mainFileList.value = [
+    {
+      uid: 'main-existing',
+      name: '3610272-8_xxl.jpg',
+      status: 'done',
+      url: getImagePath('3610272-8_xxl.jpg'),
+      // url: '3610272-8_xxl.jpg',
+
+    }
+  ]
+}
+
+const clearData = () => {
+  formState.nameZh = ''
+  formState.nameEn = ''
+  formState.price = 0
+  formState.stock = 0
+  formState.salesCondition = '上架中'
+  formState.descriptionZh = ''
+  formState.descriptionEn = ''
+  mainFileList.value = []
+}
+
 </script>
 
 <!-- Vue <font-awesome-icon> 的 icon 屬性規則
@@ -252,7 +296,7 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
               <img :src=getImagePath(product.productImg) alt="產品圖片" class="h-12 w-12 object-cover rounded" />
             </td>
             <td class="p-2 border-b border-blue-100">{{ product.nameZh }}</td>
-            <td class="p-2 border-b border-blue-100">{{ product.productPrice }}</td>
+            <td class="p-2 border-b border-blue-100">{{ product.price }}</td>
             <td class="py-2 pl-2 border-b border-blue-100">{{ product.salesCondition }}</td>
             <!-- 點擊click事件觸發openModal('edit', product)同時把product資料傳遞給openModal函式 -->
             <td class="p-2 border-b border-blue-100"><font-awesome-icon :icon="['fas', 'pen-to-square']"
@@ -281,28 +325,23 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
     <!-- Add/Edit Products Modal -->
     <AModal v-model:open="isModalVisible" :title="modalMode === 'add' ? '新增商品' : '編輯商品'" @ok="handleOk"
       @cancel="handleCancel" width="800px">
+      <span v-if="modalMode === 'add'" @click="sampleData" class="text-blue-500 cursor-pointer">快速帶入</span>
+      <span v-if="modalMode === 'add'" @click="clearData" class="text-gray-500 cursor-pointer"> | 快速清空</span>
       <AForm ref="productFormRef" :model="formState" layout="vertical">
         <AFormItem v-if="modalMode === 'edit'" label="Product ID">
           <div>{{ editingProduct?.pid }}</div>
         </AFormItem>
-        <AFormItem label="Category" name="categoryId" required :rules="[{ required: true, message: '請選擇分類' }]">
-          <ASelect v-model:value="formState.categoryId" placeholder="請選擇商品分類">
-            <ASelectOption :value="1">狗狗</ASelectOption>
-            <ASelectOption :value="2">貓咪</ASelectOption>
-            <ASelectOption :value="3">其他</ASelectOption>
-          </ASelect>
-        </AFormItem>
         <AFormItem label="Products Name (ZH)" name="nameZh" required :rules="[{ required: true, message: '請輸入中文商品名稱' }]">
           <AInput v-model:value="formState.nameZh" placeholder="請輸入中文商品名稱" />
         </AFormItem>
-        <AFormItem label="Products Name (EN)" name="nameEn" required :rules="[{ required: true, message: '請輸入英文商品名稱' }]">
+        <AFormItem label="Products Name (EN)" name="nameEn"">
           <AInput v-model:value="formState.nameEn" placeholder="請輸入英文商品名稱" />
         </AFormItem>
         <AFormItem label="Price" name="price" required :rules="[{ required: true, message: '請輸入商品價格' }]">
-          <AInputNumber v-model:value="formState.price" :min="0" style="width: 100%" placeholder="請輸入商品價格" />
+          <AInputNumber v-model:value="formState.price" style="width: 100%" placeholder="請輸入商品價格" />
         </AFormItem>
         <AFormItem label="Stock" name="stock" required :rules="[{ required: true, message: '請輸入庫存數量' }]">
-          <AInputNumber v-model:value="formState.stock" :min="0" style="width: 100%" placeholder="請輸入庫存數量" />
+          <AInputNumber v-model:value="formState.stock" style="width: 100%" placeholder="請輸入庫存數量" />
         </AFormItem>
         <AFormItem label="Sales Condition" required>
           <ASelect v-model:value="formState.salesCondition">
@@ -313,7 +352,7 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
         <AFormItem label="Products Description (ZH)" name="descriptionZh" required :rules="[{ required: true, message: '請輸入中文商品描述' }]">
           <AInput.TextArea v-model:value="formState.descriptionZh" :rows="4" placeholder="請輸入中文商品描述" />
         </AFormItem>
-        <AFormItem label="Products Description (EN)" name="descriptionEn" required :rules="[{ required: true, message: '請輸入英文商品描述' }]">
+        <AFormItem label="Products Description (EN)" name="descriptionEn" ">
           <AInput.TextArea v-model:value="formState.descriptionEn" :rows="4" placeholder="請輸入英文商品描述" />
         </AFormItem>
         <AFormItem label="主預覽圖" required>
