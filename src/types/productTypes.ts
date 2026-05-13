@@ -52,7 +52,8 @@ export interface AddProductParams {
     stock: number
     descriptionZh?: string
     descriptionEn?: string
-    productImg: string
-    images?: ProductImages[]
+    salesCondition?: string
+    productImgFile?: File
+    imageFiles?: File[]
     lang?: string
 }

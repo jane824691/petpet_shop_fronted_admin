@@ -5,10 +5,11 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { getProducts, getProduct, addProduct } from '../api/productApi'
 import type { ProductsParams, ProductDetailParams, AddProductParams } from '../types/productTypes'
 import { initialProductFormState } from '../states/productForm'
-import { PlusOutlined } from '@ant-design/icons-vue';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 import type { UploadProps } from 'ant-design-vue';
 import type { UploadFile } from 'ant-design-vue/es/upload/interface';
 import type { ProductImages } from '../types/productTypes'
+import { message } from 'ant-design-vue'
 import draggable from 'vuedraggable'
 
 
@@ -28,6 +29,7 @@ const mainImageRequiredError = ref('');
 const mainFileList = ref<UploadFile[]>([]);
 const galleryFileList = ref<UploadFile[]>([]);
 const productFormRef = ref();
+const submitLoading = ref(false);
 
 const customRequest: UploadProps['customRequest'] = (options) => {
   const { onSuccess } = options
@@ -125,10 +127,6 @@ const getProductDetail = async (pid: number) => {
   console.log('productDetail======', productDetail.value);
 }
 
-const addProductApi = async (formState: AddProductParams) => {
-  const response = await addProduct(formState);
-  console.log('response======', response);
-}
 onMounted(init);
 
 // 監聽page的變化，如果page的變化，則重新初始化，類似useEffect
@@ -164,9 +162,15 @@ const handleOk = async () => {
     mainImageRequiredError.value = '主圖為必填'
     return
   }
+  const mainFile = mainFileList.value[0]
+  const productImgFile = mainFile.originFileObj as File | undefined
+  const imageFiles = galleryFileList.value
+    .map((f) => f.originFileObj)
+    .filter((f) => f != null) as File[]
+
   const keepFilename = (p: string) => (p.includes('/') ? p.slice(p.lastIndexOf('/') + 1) : p)
-  const mainSrc = await getPreviewSrc(mainFileList.value[0])
-  formState.productImg = mainFileList.value[0].url || mainSrc || mainFileList.value[0].name || ''
+  const mainSrc = await getPreviewSrc(mainFile)
+  formState.productImg = mainFile.url || mainSrc || mainFile.name || ''
   syncGalleryImagesToForm()
   if (formState.productImg) formState.productImg = keepFilename(formState.productImg)
   if (formState.images?.length) {
@@ -176,11 +180,20 @@ const handleOk = async () => {
     }))
   }
   if (modalMode.value === 'add') {
-    // 新增邏輯
-    const newProduct = { ...formState };
-    // products.value.rows.unshift(newProduct);
-    console.log('Adding:', newProduct);
-    addProductApi(newProduct);
+    const newProduct: AddProductParams = {
+      ...formState,
+      productImgFile,
+      imageFiles,
+    }
+    submitLoading.value = true
+    try {
+      const result = await addProduct(newProduct)
+      if (!result) return
+      message.success('新增商品成功')
+      await init()
+    } finally {
+      submitLoading.value = false
+    }
   } else {
     // 編輯邏輯
     if (editingProduct.value) {
@@ -232,7 +245,26 @@ const handlePreview = async (file: UploadFile) => {
   previewTitle.value = file.name || (src.includes('/') ? src.slice(src.lastIndexOf('/') + 1) : src) || '';
 };
 
-const sampleData = () => {
+async function urlToFile(url: string, filename: string): Promise<File> {
+  const res = await fetch(url, { credentials: 'include' })
+  const blob = await res.blob()
+  const type = blob.type || (filename.endsWith('.png') ? 'image/png' : filename.endsWith('.webp') ? 'image/webp' : 'image/jpeg')
+  return new File([blob], filename, { type })
+}
+
+async function buildUploadFile(uid: string, filename: string): Promise<UploadFile> {
+  const url = getImagePath(filename)
+  const file = await urlToFile(url, filename)
+  return {
+    uid,
+    name: filename,
+    status: 'done',
+    url,
+    originFileObj: file as any,
+  }
+}
+
+const sampleData = async () => {
   formState.nameZh = '測試商品'
   formState.nameEn = 'Test Product'
   formState.price = 100
@@ -240,16 +272,16 @@ const sampleData = () => {
   formState.salesCondition = '上架中'
   formState.descriptionZh = '測試商品描述'
   formState.descriptionEn = 'Test Product Description'
-  mainFileList.value = [
-    {
-      uid: 'main-existing',
-      name: '3610272-8_xxl.jpg',
-      status: 'done',
-      url: getImagePath('3610272-8_xxl.jpg'),
-      // url: '3610272-8_xxl.jpg',
+  const [main, ...gallery] = await Promise.all([
+    buildUploadFile('main-existing', 'cheer.png'),
+    buildUploadFile('gallery-1', 'star_slash.png'),
+    buildUploadFile('gallery-2', 'like_blue.png'),
+    buildUploadFile('gallery-3', 'liked_blue.png'),
+  ])
+  mainFileList.value = [main]
+  galleryFileList.value = gallery
+  
 
-    }
-  ]
 }
 
 const clearData = () => {
@@ -261,6 +293,7 @@ const clearData = () => {
   formState.descriptionZh = ''
   formState.descriptionEn = ''
   mainFileList.value = []
+  galleryFileList.value = []
 }
 
 </script>
@@ -323,8 +356,8 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
     <v-pagination v-if="totalPagesValue > 0" v-model="page" :length="totalPagesValue" :total-visible="7"></v-pagination>
 
     <!-- Add/Edit Products Modal -->
-    <AModal v-model:open="isModalVisible" :title="modalMode === 'add' ? '新增商品' : '編輯商品'" @ok="handleOk"
-      @cancel="handleCancel" width="800px">
+    <AModal v-model:open="isModalVisible" :title="modalMode === 'add' ? '新增商品' : '編輯商品'" :confirm-loading="submitLoading"
+      @ok="handleOk" @cancel="handleCancel" width="800px">
       <span v-if="modalMode === 'add'" @click="sampleData" class="text-blue-500 cursor-pointer">快速帶入</span>
       <span v-if="modalMode === 'add'" @click="clearData" class="text-gray-500 cursor-pointer"> | 快速清空</span>
       <AForm ref="productFormRef" :model="formState" layout="vertical">
@@ -367,26 +400,34 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
         </AFormItem>
 
         <AFormItem label="其他圖片（選填，最多3張，可拖曳排序）">
-          <AUpload :file-list="galleryFileList" :max-count="3" list-type="picture-card" :custom-request="customRequest"
-            @change="handleGalleryChange" @preview="handlePreview">
-            <div v-if="galleryFileList.length < 3">
+          <div class="flex">
+          <draggable v-model="galleryFileList" item-key="uid" class="flex gap-3" @end="onGallerySortEnd">
+            <template #item="{ element, index }">
+              <div class="border rounded p-2 bg-white relative w-24">
+                <img :src="element.url || element.thumbUrl || element.preview || ''" class="w-24 h-full object-cover rounded cursor-pointer"
+                  @click="handlePreview(element)" />
+                <div class="absolute top-0 right-2 text-gray-300 cursor-pointer" danger block @click="removeGalleryImage(element.uid)"><DeleteOutlined /></div>
+              </div>
+            </template>  
+          </draggable>
+          <AUpload
+            :file-list="galleryFileList"
+            :max-count="3"
+            list-type="picture-card"
+            :show-upload-list="false"
+            :custom-request="customRequest"
+            @change="handleGalleryChange"
+            @preview="handlePreview"
+            v-if="galleryFileList.length < 3"
+            style="margin-bottom: 0px;"
+            :class="{ 'ml-3': galleryFileList.length > 0 }"
+          >
+            <div>
               <PlusOutlined />
               <div style="margin-top: 8px">Upload</div>
             </div>
           </AUpload>
-          <draggable v-model="galleryFileList" item-key="uid" class="grid grid-cols-3 gap-3 mt-3" @end="onGallerySortEnd">
-            <template #item="{ element, index }">
-              <div class="border rounded p-2 bg-white">
-                <div class="text-xs mb-2">排序 {{ index + 1 }}</div>
-                <img :src="element.url || element.thumbUrl || element.preview || ''" class="w-full h-28 object-cover rounded cursor-pointer"
-                  @click="handlePreview(element)" />
-                <AButton class="mt-2" danger block @click="removeGalleryImage(element.uid)">刪除</AButton>
-              </div>
-            </template>
-          </draggable>
-          <AModal v-model:open="previewVisible" :title="previewTitle" :footer="null" @cancel="handleImgCancel">
-            <img alt="" style="width: 100%" :src="previewImage" />
-          </AModal>
+        </div>
         </AFormItem>
       </AForm>
     </AModal>

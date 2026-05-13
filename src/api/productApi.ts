@@ -71,8 +71,9 @@ export const addProduct = async (params: AddProductParams) => {
         descriptionZh = '',
         nameEn = '',
         descriptionEn = '',
-        productImg = '',
-        images = [],
+        salesCondition = '',
+        productImgFile,
+        imageFiles = [],
         lang = 'zh-TW'
     } = params
 
@@ -85,9 +86,14 @@ export const addProduct = async (params: AddProductParams) => {
     formData.append('descriptionZh', descriptionZh);
     formData.append('nameEn', nameEn);
     formData.append('descriptionEn', descriptionEn);
+    if (salesCondition) formData.append('salesCondition', salesCondition);
 
-    if (productImg)
-        formData.append('productImg', productImg);
+    if (productImgFile)
+        formData.append('productImg', productImgFile, productImgFile.name);
+
+    for (const f of imageFiles) {
+        formData.append('images', f, f.name);
+    }
 
     const response = await fetch(
         PRODUCTS_ADD,
