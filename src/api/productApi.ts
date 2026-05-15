@@ -1,4 +1,4 @@
-import { PRODUCTS, ONE_PRODUCT, PRODUCTS_ADD } from './config'
+import { PRODUCTS, ONE_PRODUCT, PRODUCTS_ADD, PRODUCTS_DELETE } from './config'
 import type {
     AddProductParams,
     ProductsParams,
@@ -110,4 +110,20 @@ export const addProduct = async (params: AddProductParams) => {
 
     const data = await response.json()
     return data
+}
+
+export const deleteProduct = async (pid: number) => {
+    const response = await fetch(
+        PRODUCTS_DELETE + `/${pid}`,
+        {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Accept-Language': 'zh-TW',
+            },
+        }
+    )
+    if (response.status === 401 || response.status === 403) location.assign('/login')
+    if (!response.ok) return null
+    return (await response.json()) as Record<string, unknown>
 }

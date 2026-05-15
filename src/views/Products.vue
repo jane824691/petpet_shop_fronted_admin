@@ -2,7 +2,7 @@
 import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { Modal as AModal, Form as AForm, FormItem as AFormItem, Input as AInput, InputNumber as AInputNumber, Button as AButton, Select as ASelect, SelectOption as ASelectOption, Upload as AUpload } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { getProducts, getProduct, addProduct } from '../api/productApi'
+import { getProducts, getProduct, addProduct, deleteProduct as deleteProductApi } from '../api/productApi'
 import type { ProductsParams, ProductDetailParams, AddProductParams } from '../types/productTypes'
 import { initialProductFormState } from '../states/productForm'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
@@ -152,6 +152,20 @@ const openModal = async (mode: 'add' | 'edit', pid?: number) => {
   isModalVisible.value = true;
 };
 
+const deleteProduct = async (pids: number[]) => {
+  if (!pids.length) {
+    message.warning('請先選取要刪除的商品')
+    return
+  }
+  const results = await Promise.all(pids.map((pid) => deleteProductApi(pid)))
+  const failed = results.filter((r) => !r).length
+  if (failed === pids.length) return
+  if (failed > 0) message.warning(`部分刪除失敗 (${failed}/${pids.length})`)
+  else message.success('刪除商品成功')
+  pids.forEach((pid) => selectedProducts.delete(pid))
+  await init()
+}
+
 const handleOk = async () => {
   try {
     await productFormRef.value?.validate()
@@ -213,7 +227,7 @@ const handleCancel = () => {
 
 
 // 記錄哪些產品被選取
-const selectedProducts = reactive(new Set())
+const selectedProducts = reactive(new Set<number>())
 
 // 點擊切換狀態
 const toggleSelect = (pid: number) => {
@@ -318,7 +332,7 @@ Brands	fab	@fortawesome/free-brands-svg-icons -->
             <th class="p-2 text-left">Status</th>
             <th class="p-2 text-left ">Edit</th>
             <th class="p-2 text-left rounded-tr-lg"><font-awesome-icon :icon="['fas', 'trash']"
-                class="inline-block size-4" /></th>
+                class="inline-block size-4 cursor-pointer" @click="deleteProduct([...selectedProducts])" /></th>
           </tr>
         </thead>
         <tbody>
