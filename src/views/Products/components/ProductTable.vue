@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue'
-import { Button as AButton, message } from 'ant-design-vue'
+import { Button as AButton, Tooltip as ATooltip, message } from 'ant-design-vue'
 import { getProducts, deleteProduct as deleteProductApi } from '../../../api/productApi'
 import type { ProductsParams } from '../../../types/productTypes'
 import { getImagePath } from '../../../utils/productImage'
@@ -63,17 +63,26 @@ defineExpose({ init })
       <thead>
         <tr class="bg-sky-200 rounded-lg">
           <th class="py-2 pl-4 text-left rounded-tl-lg">No,</th>
-          <th class="p-2 text-left">Pic</th>
+          <th class="p-2 text-center">Pic</th>
           <th class="p-2 pl-6 text-left">Products Name</th>
-          <th class="p-2 text-left">Price</th>
-          <th class="p-2 text-left">Status</th>
-          <th class="p-2 text-left">Edit</th>
-          <th class="p-2 text-left rounded-tr-lg">
+          <th class="p-2 text-center">Price</th>
+          <th class="p-2 text-center">Stock</th>
+          <th class="p-2 text-center">Status</th>
+          <th class="p-2 text-center">Edit</th>
+          <th class="p-3 text-left rounded-tr-lg inline-flex align-middle">
             <font-awesome-icon
               :icon="['fas', 'trash']"
               class="inline-block size-4 cursor-pointer"
               @click="deleteSelected"
             />
+            <ATooltip title="只可刪大於No.204商品">
+              <span class="inline-flex ml-1">
+                <font-awesome-icon
+                  :icon="['fas', 'circle-question']"
+                  class="size-4 cursor-help text-gray-500"
+                />
+              </span>
+            </ATooltip>
           </th>
         </tr>
       </thead>
@@ -81,10 +90,10 @@ defineExpose({ init })
         <tr
           v-for="(product, index) in products.rows"
           :key="product.pid"
-          :class="index % 2 === 1 ? 'bg-blue-50' : ''"
+          :class="`${index % 2 === 1 ? 'bg-blue-50' : ''} ${product.salesCondition === '已下架' ? 'text-gray-400' : ''}`"
         >
           <td class="py-2 pl-4 border-b border-blue-100">{{ product.pid }}</td>
-          <td class="p-2 border-b border-blue-100">
+          <td class="p-2 border-b border-blue-100 flex justify-center">
             <img
               :src="getImagePath(product.productImg)"
               alt="產品圖片"
@@ -92,9 +101,10 @@ defineExpose({ init })
             />
           </td>
           <td class="p-2 border-b border-blue-100">{{ product.nameZh }}</td>
-          <td class="p-2 border-b border-blue-100">{{ product.price }}</td>
-          <td class="py-2 pl-2 border-b border-blue-100">{{ product.salesCondition }}</td>
-          <td class="p-2 border-b border-blue-100">
+          <td class="p-2 border-b border-blue-100 text-center">{{ product.price }}</td>
+          <td class="p-2 border-b border-blue-100 text-center">{{ product.stock }}</td>
+          <td class="p-2 border-b border-blue-100 text-center">{{ product.salesCondition }}</td>
+          <td class="p-2 border-b border-blue-100 text-center">
             <font-awesome-icon
               :icon="['fas', 'pen-to-square']"
               class="inline-block size-4 text-blue-500 cursor-pointer"

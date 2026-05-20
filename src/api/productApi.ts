@@ -1,7 +1,7 @@
-import { PRODUCTS, ONE_PRODUCT, PRODUCTS_ADD, PRODUCTS_DELETE } from './config'
+import { PRODUCTS, ONE_PRODUCT, PRODUCTS_ADD, PRODUCTS_DELETE, PRODUCTS_EDIT } from './config'
 import type {
     AddProductParams,
-    ProductsParams,
+    EditProductParams,
     ProductsListPageRaw,
     ProductDetailParams,
     SearchProductParams,
@@ -99,6 +99,68 @@ export const addProduct = async (params: AddProductParams) => {
         PRODUCTS_ADD,
         {
             method: 'POST',
+            credentials: 'include',
+            body: formData,
+            headers: {
+                'Accept-Language': lang,
+            }
+        }
+    )
+    if (response.status === 401 || response.status === 403) location.assign('/login')
+
+    const data = await response.json()
+    return data
+}
+
+export const editProduct = async (params: EditProductParams) => {
+    const {
+        pid,
+        categoryId,
+        nameZh,
+        nameEn,
+        price,
+        stock,
+        descriptionZh,
+        descriptionEn,
+        salesCondition,
+        productImg,
+        productImgFile,
+        existingImages,
+        imageFiles,
+        lang = 'zh-TW',
+    } = params
+
+    const formData = new FormData();
+
+    formData.append('categoryId', String(categoryId));
+    formData.append('nameZh', nameZh);
+    formData.append('price', String(price));
+    formData.append('stock', String(stock));
+    formData.append('descriptionZh', descriptionZh);
+    if (nameEn) formData.append('nameEn', nameEn);
+    if (descriptionEn) formData.append('descriptionEn', descriptionEn);
+    formData.append('salesCondition', salesCondition);
+
+    if (productImgFile) {
+        formData.append('productImg', productImgFile, productImgFile.name);
+    } else if (productImg) {
+        formData.append('productImg', productImg);
+    }
+
+    if (existingImages !== undefined) {
+        formData.append('existingImages', JSON.stringify(existingImages));
+    }
+
+    if (imageFiles?.length) {
+        for (const f of imageFiles) {
+            formData.append('images', f, f.name);
+        }
+    }
+
+    const response = await fetch(
+        PRODUCTS_EDIT + `/${pid}`,
+        {
+            method: 'PUT',
             credentials: 'include',
             body: formData,
             headers: {

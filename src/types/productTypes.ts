@@ -40,7 +40,7 @@ export interface ProductDetailParams {
     descriptionZh: string
     descriptionEn: string
     productImg: string
-    editTime: string
+    editTime?: string
     images?: ProductImages[]
 }
 
@@ -54,6 +54,23 @@ export interface AddProductParams {
     descriptionEn?: string
     salesCondition?: string
     productImgFile?: File
+    imageFiles?: File[]
+    lang?: string
+}
+
+export interface EditProductParams {
+    pid: number
+    categoryId: number
+    nameZh: string
+    nameEn?: string
+    price: number
+    stock: number
+    descriptionZh: string
+    descriptionEn?: string
+    salesCondition: string
+    productImg?: string
+    productImgFile?: File
+    existingImages?: ProductImages[]
     imageFiles?: File[]
     lang?: string
 }
